@@ -25,7 +25,10 @@ void main()
 		vec3 Normal = texture2D(BumpTex, vec2(gl_TexCoord[0])).xyz;
 		Normal -= 0.5f;
 		Normal *= 2.0f;
-		N *= normalize(Normal);
+		N = normalize(Normal);
+		N *= fN;
+		N = normalize(N);
+		//N = normalize(Normal);
 	}
 
     vec3 E = normalize(fE);
