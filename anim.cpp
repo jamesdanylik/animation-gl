@@ -56,7 +56,8 @@ int Recording = 0 ;
 void resetArcball() ;
 void save_image();
 void instructions();
-void set_colour(float r, float g, float b) ;
+void set_colour(float r, float g, float b);
+void load_textures();
 // String Type Declation?
 const int STRLEN = 100;
 typedef char STR[STRLEN];
@@ -86,6 +87,8 @@ Angel::vec4 ref{0.0, 0.0, 0.0,1.0};
 Angel::vec4 up{0.0,1.0,0.0,0.0};
 // Time variable
 double TIME = 0.0 ;
+
+/* Function Implmentations */
 
 // Render a solid cylinder  oriented along the Z axis. Both bases are of radius 1. 
 // The bases of the cylinder are placed at Z = 0, and at Z = 1
@@ -185,42 +188,9 @@ void myKey(unsigned char key, int x, int y)
 
 }
 
-// Initialization Function
-void myinit(void)
+void load_textures(void)
 {
-    // Load shaders and use the resulting shader program
-    GLuint program = InitShader( "Shaders/vshader.glsl", "Shaders/fshader.glsl" );
-    glUseProgram(program);
-
-    // Generate vertex arrays for geometric shapes
-    generateCube(program, &cubeData);
-    generateSphere(program, &sphereData);
-    generateCone(program, &coneData);
-    generateCylinder(program, &cylData);
-
-    uModelView  = glGetUniformLocation( program, "ModelView"  );
-    uProjection = glGetUniformLocation( program, "Projection" );
-    uView       = glGetUniformLocation( program, "View"       );
-
-    glClearColor( 0.1, 0.1, 0.2, 1.0 ); // dark blue background
-
-    uAmbient   = glGetUniformLocation( program, "AmbientProduct"  );
-    uDiffuse   = glGetUniformLocation( program, "DiffuseProduct"  );
-    uSpecular  = glGetUniformLocation( program, "SpecularProduct" );
-    uLightPos  = glGetUniformLocation( program, "LightPosition"   );
-    uShininess = glGetUniformLocation( program, "Shininess"       );
-    uTex       = glGetUniformLocation( program, "Tex"             );
-    uEnableTex = glGetUniformLocation( program, "EnableTex"       );
-
-    glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
-    glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
-    glUniform4f(uSpecular,   0.2f,  0.2f,  0.2f, 1.0f);
-    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
-    glUniform1f(uShininess, 100.0f);
-
-    glEnable(GL_DEPTH_TEST);
-
-    TgaImage coolImage;
+	TgaImage coolImage;
     if (!coolImage.loadTGA("Textures/challenge.tga"))
     {
         printf("Error loading image file\n");
@@ -263,6 +233,44 @@ void myinit(void)
     // (set in glActiveTexture(GL_TEXTURE0))
     
     glUniform1i( uTex, 0);
+}
+
+// Initialization Function
+void myinit(void)
+{
+    // Load shaders and use the resulting shader program
+    GLuint program = InitShader( "Shaders/vshader.glsl", "Shaders/fshader.glsl" );
+    glUseProgram(program);
+
+    // Generate vertex arrays for geometric shapes
+    generateCube(program, &cubeData);
+    generateSphere(program, &sphereData);
+    generateCone(program, &coneData);
+    generateCylinder(program, &cylData);
+
+    uModelView  = glGetUniformLocation( program, "ModelView"  );
+    uProjection = glGetUniformLocation( program, "Projection" );
+    uView       = glGetUniformLocation( program, "View"       );
+
+    glClearColor( 0.1, 0.1, 0.2, 1.0 ); // dark blue background
+
+    uAmbient   = glGetUniformLocation( program, "AmbientProduct"  );
+    uDiffuse   = glGetUniformLocation( program, "DiffuseProduct"  );
+    uSpecular  = glGetUniformLocation( program, "SpecularProduct" );
+    uLightPos  = glGetUniformLocation( program, "LightPosition"   );
+    uShininess = glGetUniformLocation( program, "Shininess"       );
+    uTex       = glGetUniformLocation( program, "Tex"             );
+    uEnableTex = glGetUniformLocation( program, "EnableTex"       );
+
+    glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
+    glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
+    glUniform4f(uSpecular,   0.2f,  0.2f,  0.2f, 1.0f);
+    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
+    glUniform1f(uShininess, 100.0f);
+
+    glEnable(GL_DEPTH_TEST);
+
+    load_textures();
     
     Arcball = new BallData;
     Ball_Init(Arcball);
