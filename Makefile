@@ -5,7 +5,7 @@ CFLAGS=-c -std=c++11 -Wall -Wno-unused-function
 LDFLAGS=-lGLEW -lglut -lGL
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=bee-demo-gl
+EXECUTABLE=animation-gl
 ARCHIVE=403548957_linux
 
 all: $(SOURCES) $(EXECUTABLE)

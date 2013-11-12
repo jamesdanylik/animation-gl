@@ -283,14 +283,14 @@ void myinit(void)
     glEnable(GL_DEPTH_TEST);
 
     TgaImage coolImage;
-    if (!coolImage.loadTGA("challenge.tga"))
+    if (!coolImage.loadTGA("Textures/challenge.tga"))
     {
         printf("Error loading image file\n");
         exit(1);
     }
     
     TgaImage earthImage;
-    if (!earthImage.loadTGA("earth.tga"))
+    if (!earthImage.loadTGA("Textures/earth.tga"))
     {
         printf("Error loading image file\n");
         exit(1);
