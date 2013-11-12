@@ -369,12 +369,14 @@ void display(void)
     model_view *= Translate(3.0f, 0.0f, 0.0f);
 
     // Previously glScalef(3,3,3);
+	mvstack.push(model_view);
+	model_view *= RotateY(20.0f * TIME);
     model_view *= Scale(3.0f, 3.0f, 3.0f);
-
     drawCube();
+	model_view = mvstack.pop();
 
     // And extra shapes!
-    model_view *= Scale(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f);
+    //model_view *= Scale(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f);
     model_view *= Translate(3.0f, 0.0f, 0.0f);
     set_colour(1.0f, 1.0f, 0.0f);
     drawCone();
