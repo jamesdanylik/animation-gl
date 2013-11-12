@@ -1,4 +1,4 @@
-#include "tga.h"
+#include "Tga.h"
 #include <stdio.h>
 
 bool TgaImage::loadTGA(const char *filename)

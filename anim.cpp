@@ -1,14 +1,9 @@
 ////////////////////////////////////////////////////
-// anim.cpp version 4.1
-// Template code for drawing an articulated figure.
-// CS 174A 
+// animation-gl
+// from template anim.cpp, version 4.1
 ////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
-
+/* OpenGL Includes */
 #ifdef WIN32
 #include <windows.h>
 #include "GL/glew.h"
@@ -28,99 +23,72 @@
 #include <GL/glut.h>
 #endif
 
+/* System Includes */
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
+
+/* Application Includes */
 #include "Ball.h"
 #include "FrameSaver.h"
 #include "Timer.h"
 #include "Shapes.h"
-#include "tga.h"
-
+#include "Tga.h"
 #include "Angel/Angel.h"
+#include "Angel/MatrixStack.h"
 
+/* Global Variables - Courtesy of the template. */
+// Framsaver Variables
 FrameSaver FrSaver ;
 Timer TM ;
-
+// Arcball Variables
 BallData *Arcball = NULL ;
 int Width = 800;
 int Height = 800 ;
 int Button = -1 ;
 float Zoom = 1 ;
 int PrevY = 0 ;
-
+// Global Program Flags
 int Animate = 0 ;
 int Recording = 0 ;
-
+// Function Declarations
 void resetArcball() ;
 void save_image();
 void instructions();
 void set_colour(float r, float g, float b) ;
-
+// String Type Declation?
 const int STRLEN = 100;
 typedef char STR[STRLEN];
-
+// Global Constants
 #define PI 3.1415926535897
 #define X 0
 #define Y 1
 #define Z 2
-
 //texture
-
 GLuint texture_cube;
 GLuint texture_earth;
-
 // Structs that hold the Vertex Array Object index and number of vertices of each shape.
 ShapeData cubeData;
 ShapeData sphereData;
 ShapeData coneData;
 ShapeData cylData;
-
-// Matrix stack that can be used to push and pop the modelview matrix.
-class MatrixStack {
-    int    _index;
-    int    _size;
-    mat4*  _matrices;
-
-   public:
-    MatrixStack( int numMatrices = 32 ):_index(0), _size(numMatrices)
-        { _matrices = new mat4[numMatrices]; }
-
-    ~MatrixStack()
-	{ delete[]_matrices; }
-
-    void push( const mat4& m ) {
-        assert( _index + 1 < _size );
-        _matrices[_index++] = m;
-    }
-
-    mat4& pop( void ) {
-        assert( _index - 1 >= 0 );
-        _index--;
-        return _matrices[_index];
-    }
-};
-
+// Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
 GLint        uModelView, uProjection, uView;
 GLint        uAmbient, uDiffuse, uSpecular, uLightPos, uShininess;
 GLint        uTex, uEnableTex;
-
 // The eye point and look-at point.
 // Currently unused. Use to control a camera with LookAt().
 Angel::vec4 eye{0, 0.0, 50.0,1.0};
 Angel::vec4 ref{0.0, 0.0, 0.0,1.0};
 Angel::vec4 up{0.0,1.0,0.0,0.0};
-
+// Time variable
 double TIME = 0.0 ;
 
-/////////////////////////////////////////////////////
-//    PROC: drawCylinder()
-//    DOES: this function 
-//          render a solid cylinder  oriented along the Z axis. Both bases are of radius 1. 
-//          The bases of the cylinder are placed at Z = 0, and at Z = 1.
-//
-//          
-// Don't change.
-//////////////////////////////////////////////////////
+// Render a solid cylinder  oriented along the Z axis. Both bases are of radius 1. 
+// The bases of the cylinder are placed at Z = 0, and at Z = 1
 void drawCylinder(void)
 {
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
@@ -128,14 +96,8 @@ void drawCylinder(void)
     glDrawArrays( GL_TRIANGLES, 0, cylData.numVertices );
 }
 
-//////////////////////////////////////////////////////
-//    PROC: drawCone()
-//    DOES: this function 
-//          render a solid cone oriented along the Z axis with base radius 1. 
-//          The base of the cone is placed at Z = 0, and the top at Z = 1. 
-//         
-// Don't change.
-//////////////////////////////////////////////////////
+// Render a solid cone oriented along the Z axis with base radius 1. 
+// The base of the cone is placed at Z = 0, and the top at Z = 1. 
 void drawCone(void)
 {
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
@@ -144,14 +106,8 @@ void drawCone(void)
 }
 
 
-//////////////////////////////////////////////////////
-//    PROC: drawCube()
-//    DOES: this function draws a cube with dimensions 1,1,1
-//          centered around the origin.
-// 
-// Don't change.
-//////////////////////////////////////////////////////
-
+// this function draws a cube with dimensions 1,1,1
+// centered around the origin.
 void drawCube(void)
 {
     glBindTexture( GL_TEXTURE_2D, texture_cube );
@@ -163,14 +119,8 @@ void drawCube(void)
 }
 
 
-//////////////////////////////////////////////////////
-//    PROC: drawSphere()
-//    DOES: this function draws a sphere with radius 1
-//          centered around the origin.
-// 
-// Don't change.
-//////////////////////////////////////////////////////
-
+// This function draws a sphere with radius 1
+// centered around the origin.
 void drawSphere(void)
 {
     glBindTexture( GL_TEXTURE_2D, texture_earth);
@@ -181,20 +131,14 @@ void drawSphere(void)
     glUniform1i( uEnableTex, 0 );
 }
 
-
+// Resets the mouse to starting posisition?
 void resetArcball()
 {
     Ball_Init(Arcball);
     Ball_Place(Arcball,qOne,0.75);
 }
 
-
-//////////////////////////////////////////////////////
-//    PROC: myKey()
-//    DOES: this function gets caled for any keypresses
-// 
-//////////////////////////////////////////////////////
-
+// Key handler
 void myKey(unsigned char key, int x, int y)
 {
     float time ;
@@ -241,17 +185,11 @@ void myKey(unsigned char key, int x, int y)
 
 }
 
-/*********************************************************
-    PROC: myinit()
-    DOES: performs most of the OpenGL intialization
-     -- change these with care, if you must.
-
-**********************************************************/
-
+// Initialization Function
 void myinit(void)
 {
     // Load shaders and use the resulting shader program
-    GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
+    GLuint program = InitShader( "Shaders/vshader.glsl", "Shaders/fshader.glsl" );
     glUseProgram(program);
 
     // Generate vertex arrays for geometric shapes
@@ -331,12 +269,7 @@ void myinit(void)
     Ball_Place(Arcball,qOne,0.75);
 }
 
-/*********************************************************
-    PROC: set_colour();
-    DOES: sets all material properties to the given colour
-    -- don't change
-**********************************************************/
-
+// sets all material properties to the given colour -- don't change
 void set_colour(float r, float g, float b)
 {
     float ambient  = 0.2f;
@@ -347,22 +280,7 @@ void set_colour(float r, float g, float b)
     glUniform4f(uSpecular, specular*r, specular*g, specular*b, 1.0f);
 }
 
-/*********************************************************
-**********************************************************
-**********************************************************
-
-    PROC: display()
-    DOES: this gets called by the event handler to draw
-          the scene, so this is where you need to build
-          your ROBOT --  
-      
-        MAKE YOUR CHANGES AND ADDITIONS HERE
-
-    Add other procedures if you like.
-
-**********************************************************
-**********************************************************
-**********************************************************/
+// Display Function (Primary Changes)
 void display(void)
 {
     // Clear the screen with the background colour (set in myinit)
@@ -420,13 +338,7 @@ void display(void)
         FrSaver.DumpPPM(Width, Height) ;
 }
 
-/**********************************************
-    PROC: myReshape()
-    DOES: handles the window being resized 
-    
-      -- don't change
-**********************************************************/
-
+// Window Resize Handler
 void myReshape(int w, int h)
 {
     Width = w;
@@ -438,6 +350,7 @@ void myReshape(int w, int h)
     glUniformMatrix4fv( uProjection, 1, GL_TRUE, projection );
 }
 
+// Prints instructions in console on launch
 void instructions() 
 {
     printf("Press:\n");
@@ -520,13 +433,8 @@ void idleCB(void)
         glutPostRedisplay() ; 
     }
 }
-/*********************************************************
-     PROC: main()
-     DOES: calls initialization, then hands over control
-           to the event handler, which calls 
-           display() whenever the screen needs to be redrawn
-**********************************************************/
 
+// Main Function, program starting point:
 int main(int argc, char** argv) 
 {
     glutInit(&argc, argv);
@@ -556,7 +464,3 @@ int main(int argc, char** argv)
     TM.Reset() ;
     return 0;         // never reached
 }
-
-
-
-
