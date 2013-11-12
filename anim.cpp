@@ -69,6 +69,7 @@ typedef char STR[STRLEN];
 //texture
 GLuint texture_cube;
 GLuint texture_earth;
+GLuint texture_bump;
 // Structs that hold the Vertex Array Object index and number of vertices of each shape.
 ShapeData cubeData;
 ShapeData sphereData;
@@ -79,7 +80,7 @@ MatrixStack  mvstack;
 mat4         model_view;
 GLint        uModelView, uProjection, uView;
 GLint        uAmbient, uDiffuse, uSpecular, uLightPos, uShininess;
-GLint        uTex, uEnableTex;
+GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex;
 // The eye point and look-at point.
 // Currently unused. Use to control a camera with LookAt().
 Angel::vec4 eye{0, 0.0, 50.0,1.0};
@@ -94,18 +95,26 @@ double TIME = 0.0 ;
 // The bases of the cylinder are placed at Z = 0, and at Z = 1
 void drawCylinder(void)
 {
+        glBindTexture( GL_TEXTURE_2D, texture_cube );
+        glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( cylData.vao );
     glDrawArrays( GL_TRIANGLES, 0, cylData.numVertices );
+	glUniform1i( uEnableTex, 0);
+
 }
 
 // Render a solid cone oriented along the Z axis with base radius 1. 
 // The base of the cone is placed at Z = 0, and the top at Z = 1. 
 void drawCone(void)
 {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_2D, texture_cube );
+	glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( coneData.vao );
     glDrawArrays( GL_TRIANGLES, 0, coneData.numVertices );
+	glUniform1i( uEnableTex, 0);
 }
 
 
@@ -113,12 +122,19 @@ void drawCone(void)
 // centered around the origin.
 void drawCube(void)
 {
+	glActiveTexture(GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, texture_cube );
     glUniform1i( uEnableTex, 1 );
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture( GL_TEXTURE_2D, texture_bump );
+	glUniform1i ( uEnableBumpTex, 1);
+
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( cubeData.vao );
     glDrawArrays( GL_TRIANGLES, 0, cubeData.numVertices );
     glUniform1i( uEnableTex, 0 );
+	glUniform1i( uEnableBumpTex, 0);
+	glActiveTexture(GL_TEXTURE0);
 }
 
 
@@ -204,7 +220,15 @@ void load_textures(void)
         exit(1);
     }
 
+
+	TgaImage bumpImage;
+	if(!bumpImage.loadTGA("Textures/bump.tga"))
+	{
+		printf("Error loading bump map file\n");
+		exit(1);
+	}
     
+	glActiveTexture(GL_TEXTURE0);
     glGenTextures( 1, &texture_cube );
     glBindTexture( GL_TEXTURE_2D, texture_cube );
     
@@ -231,8 +255,24 @@ void load_textures(void)
     
     // Set texture sampler variable to texture unit 0
     // (set in glActiveTexture(GL_TEXTURE0))
-    
+   
+	glActiveTexture(GL_TEXTURE1);
+    glGenTextures( 1, &texture_bump );
+    glBindTexture( GL_TEXTURE_2D, texture_bump );
+
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, bumpImage.width, bumpImage.height, 0,
+                 (bumpImage.byteCount == 3) ? GL_BGR : GL_BGRA,
+                 GL_UNSIGNED_BYTE, bumpImage.data );
+	glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+
+
+ 
     glUniform1i( uTex, 0);
+	glUniform1i( uBumpTex, 1);
 }
 
 // Initialization Function
@@ -261,6 +301,9 @@ void myinit(void)
     uShininess = glGetUniformLocation( program, "Shininess"       );
     uTex       = glGetUniformLocation( program, "Tex"             );
     uEnableTex = glGetUniformLocation( program, "EnableTex"       );
+	uBumpTex   = glGetUniformLocation( program, "BumpTex"		  );
+	uEnableBumpTex = glGetUniformLocation( program, "EnableBumpTex");
+
 
     glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);

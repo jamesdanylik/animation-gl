@@ -11,11 +11,23 @@ uniform vec4  LightPosition;
 uniform float Shininess;
 uniform sampler2D Tex;
 uniform int   EnableTex;
+uniform sampler2D BumpTex;
+uniform int   EnableBumpTex;
 
 void main() 
 { 
     // Normalize the input lighting vectors
     vec3 N = normalize(fN);
+
+    // Bump mapping??
+	if (EnableBumpTex == 1)
+	{
+		vec3 Normal = texture2D(BumpTex, vec2(gl_TexCoord[0])).xyz;
+		Normal -= 0.5f;
+		Normal *= 2.0f;
+		N *= normalize(Normal);
+	}
+
     vec3 E = normalize(fE);
     vec3 L = normalize(fL);
 
