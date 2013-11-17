@@ -43,7 +43,7 @@ void setVertexAttrib(GLuint program,
 }
 
 //----------------------------------------------------------------------------
-// Cube
+// Cube (Uniform)
 
 const int numCubeVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
@@ -66,7 +66,7 @@ point4 vertices[8] = {
 // quad generates two triangles for each face and assigns normals and texture coordinates
 //    to the vertices
 int Index = 0;
-void quad( int a, int b, int c, int d, const point3& normal )
+void quad( int a, int b, int c, int d, const point3& normal)
 {
     cubePoints[Index] = vertices[a]; cubeNormals[Index] = normal; 
     cubeUV[Index] = point2(0.0f, 1.0f); Index++;
@@ -110,6 +110,58 @@ void generateCube(GLuint program, ShapeData* cubeData)
         (float*)cubeUV,      sizeof(cubeUV));
 }
 
+// Cube (Multi-face)
+
+const int numMCubeVerticies = 36;
+point4	mCubePoints		[numMCubeVerticies];
+point3	mCubeNormals	[numMCubeVerticies];
+point2	mCubeUV			[numMCubeVerticies];
+
+point4 mVertices[8] = vertices;
+
+int mIndex = 0;
+void mQuad( int a, int b, int c, int d, const point3& normal, int face)
+{
+    mCubePoints[mIndex] = mVertices[a]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2(face*(1.0/6), 1.0f); mIndex++;
+    mCubePoints[mIndex] = mVertices[b]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2(face*(1.0/6), 0.0f); mIndex++;
+    mCubePoints[mIndex] = mVertices[c]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2((face+1)*(1.0/6), 0.0f); mIndex++;
+    mCubePoints[mIndex] = mVertices[a]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2(face*(1.0/6), 1.0f); mIndex++;
+    mCubePoints[mIndex] = mVertices[c]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2((face+1)*(1.0/6), 0.0f); mIndex++;
+    mCubePoints[mIndex] = mVertices[d]; mCubeNormals[mIndex] = normal;
+    mCubeUV[mIndex] = point2((face+1)*(1.0/6), 1.0f); mIndex++;
+}
+
+void mColorcube()
+{
+    mQuad( 1, 0, 3, 2, point3( 0.0f,  0.0f,  1.0f), 0 );
+    mQuad( 2, 3, 7, 6, point3( 1.0f,  0.0f,  0.0f), 1 );
+    mQuad( 3, 0, 4, 7, point3( 0.0f, -1.0f,  0.0f), 2 );
+    mQuad( 6, 5, 1, 2, point3( 0.0f,  1.0f,  0.0f), 3 );
+    mQuad( 4, 5, 6, 7, point3( 0.0f,  0.0f, -1.0f), 4 );
+    mQuad( 5, 4, 0, 1, point3(-1.0f,  0.0f,  0.0f), 5 );
+}
+
+// initialization
+void generateMCube(GLuint program, ShapeData* cubeData)
+{
+    mColorcube();
+    cubeData->numVertices = numMCubeVerticies;
+
+    // Create a vertex array object
+    glGenVertexArrays( 1, &cubeData->vao );
+    glBindVertexArray( cubeData->vao );
+
+    // Set vertex attributes
+    setVertexAttrib(program,
+        (float*)mCubePoints,  sizeof(mCubePoints),
+        (float*)mCubeNormals, sizeof(mCubeNormals),
+        (float*)mCubeUV,      sizeof(mCubeUV));
+}
 
 //----------------------------------------------------------------------------
 // Sphere approximation by recursive subdivision of a tetrahedron
@@ -241,6 +293,7 @@ const int numConeVertices = numConeDivisions * 6;
 
 point4 conePoints [numConeVertices];
 point3 coneNormals[numConeVertices];
+//point2 coneUVs[numConeVertices];
 
 point2 circlePoints[numConeDivisions];
 
@@ -301,6 +354,7 @@ const int numCylVertices = numCylDivisions * 12;
 
 point4 cylPoints [numCylVertices];
 point3 cylNormals[numCylVertices];
+//point2 cylUVs[numCylVerticies];
 
 void generateCylinder(GLuint program, ShapeData* cylData)
 {

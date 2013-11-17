@@ -75,6 +75,7 @@ ShapeData cubeData;
 ShapeData sphereData;
 ShapeData coneData;
 ShapeData cylData;
+ShapeData mCubeData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -137,6 +138,16 @@ void drawCube(void)
 	glActiveTexture(GL_TEXTURE0);
 }
 
+void drawMCube(void)
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_2D, texture_earth);
+	glUniform1i( uEnableTex, 1);
+	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
+	glBindVertexArray( mCubeData.vao );
+	glDrawArrays( GL_TRIANGLES, 0, mCubeData.numVertices );
+	glUniform1i( uEnableTex, 0);
+}
 
 // This function draws a sphere with radius 1
 // centered around the origin.
@@ -287,6 +298,7 @@ void myinit(void)
     generateSphere(program, &sphereData);
     generateCone(program, &coneData);
     generateCylinder(program, &cylData);
+	generateMCube(program, &mCubeData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -385,6 +397,8 @@ void display(void)
     set_colour(1.0f, 1.0f, 1.0f);
     drawCylinder();
 
+	model_view *= Translate(-3.0f, 0.0f, 0.0f);
+	drawMCube();
 
     glutSwapBuffers();
     if(Recording == 1)
