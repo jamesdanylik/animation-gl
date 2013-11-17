@@ -194,12 +194,32 @@ void generateSphere(GLuint program, ShapeData* sphereData)
     }
     
     // TexCoords
-    double u, v;
-    for (int i = 0; i < numSphereVertices; i++)
+    double u1, v1, u2, v2, u3, v3;
+    for (int i = 0; i < (numSphereVertices/3); i++)
     {
-        v = 0.5 - asin(spherePoints[i].y)/M_PI ; //0~1
-        u = 0.5*(atan2(spherePoints[i].z,spherePoints[i].x)/M_PI + 1); //0~1
-        sphereUVs[i] = point2(u,v);
+
+		// Fix for bad UV mapping before!  Huzzah!
+        v1 = 0.5 - asin(spherePoints[i*3].y)/M_PI ; //0~1
+        u1 = 0.5*(atan2(spherePoints[i*3].z,spherePoints[i*3].x)/M_PI + 1); //0~1
+
+		v2 = 0.5 - asin(spherePoints[(i*3)+1].y)/M_PI;
+		u2 = 0.5*(atan2(spherePoints[(i*3)+1].z, spherePoints[(i*3)+1].x)/M_PI + 1);
+		if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
+			u2 += 1.0;
+		else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
+			u2 -= 1.0;
+
+
+		v3 = 0.5 - asin(spherePoints[(i*3)+2].y)/M_PI;
+		u3 = 0.5*(atan2(spherePoints[(i*3)+2].z, spherePoints[(i*3)+2].x)/M_PI + 1);
+		if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
+			u3 += 1.0;
+		else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
+			u3 -= 1.0;
+
+        sphereUVs[i*3] = point2(u1,v1);
+		sphereUVs[(i*3)+1] = point2(u2,v2);
+		sphereUVs[(i*3)+2] = point2(u3,v3);
     }
 
     // Create a vertex array object
