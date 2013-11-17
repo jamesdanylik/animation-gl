@@ -26,6 +26,7 @@
 /* System Includes */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 
@@ -70,6 +71,20 @@ typedef char STR[STRLEN];
 GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
+
+const int max_textures = 5;
+const int max_filename_length = 30;
+const char texture_filenames[max_textures][max_filename_length] = {
+			"cobblestone.tga",		//0
+			"cobblestone_bump.tga",	//1
+			"colorcube.tga",		//2
+			"moon.tga",				//3
+			"moon_bump.tga"			//4
+};
+GLuint gl_textures[max_textures];
+TgaImage texture_images[max_textures];
+
+
 // Structs that hold the Vertex Array Object index and number of vertices of each shape.
 ShapeData cubeData;
 ShapeData sphereData;
@@ -96,12 +111,12 @@ double TIME = 0.0 ;
 // The bases of the cylinder are placed at Z = 0, and at Z = 1
 void drawCylinder(void)
 {
-        glBindTexture( GL_TEXTURE_2D, texture_cube );
-        glUniform1i( uEnableTex, 1 );
+    //glBindTexture( GL_TEXTURE_2D, texture_cube );
+    //glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( cylData.vao );
     glDrawArrays( GL_TRIANGLES, 0, cylData.numVertices );
-	glUniform1i( uEnableTex, 0);
+	//glUniform1i( uEnableTex, 0);
 
 }
 
@@ -109,13 +124,13 @@ void drawCylinder(void)
 // The base of the cone is placed at Z = 0, and the top at Z = 1. 
 void drawCone(void)
 {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture( GL_TEXTURE_2D, texture_cube );
-	glUniform1i( uEnableTex, 1 );
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture( GL_TEXTURE_2D, texture_cube );
+	//glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( coneData.vao );
     glDrawArrays( GL_TRIANGLES, 0, coneData.numVertices );
-	glUniform1i( uEnableTex, 0);
+	//glUniform1i( uEnableTex, 0);
 }
 
 
@@ -124,10 +139,10 @@ void drawCone(void)
 void drawCube(void)
 {
 	glActiveTexture(GL_TEXTURE0);
-    glBindTexture( GL_TEXTURE_2D, texture_cube );
+    glBindTexture( GL_TEXTURE_2D, gl_textures[0] );
     glUniform1i( uEnableTex, 1 );
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture( GL_TEXTURE_2D, texture_bump );
+	glBindTexture( GL_TEXTURE_2D, gl_textures[1] );
 	glUniform1i ( uEnableBumpTex, 1);
 
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
@@ -141,7 +156,7 @@ void drawCube(void)
 void drawMCube(void)
 {
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture( GL_TEXTURE_2D, texture_earth);
+	glBindTexture( GL_TEXTURE_2D, gl_textures[2]);
 	glUniform1i( uEnableTex, 1);
 	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
 	glBindVertexArray( mCubeData.vao );
@@ -153,7 +168,7 @@ void drawMCube(void)
 // centered around the origin.
 void drawSphere(void)
 {
-    glBindTexture( GL_TEXTURE_2D, texture_earth);
+    glBindTexture( GL_TEXTURE_2D, gl_textures[3]);
     glUniform1i( uEnableTex, 1);
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( sphereData.vao );
@@ -217,70 +232,38 @@ void myKey(unsigned char key, int x, int y)
 
 void load_textures(void)
 {
-	TgaImage coolImage;
-    if (!coolImage.loadTGA("Textures/challenge.tga"))
-    {
-        printf("Error loading image file\n");
-        exit(1);
-    }
-    
-    TgaImage earthImage;
-    if (!earthImage.loadTGA("Textures/earth.tga"))
-    {
-        printf("Error loading image file\n");
-        exit(1);
-    }
 
-
-	TgaImage bumpImage;
-	if(!bumpImage.loadTGA("Textures/bump.tga"))
+	for( int i = 0; i < max_textures; i++)
 	{
-		printf("Error loading bump map file\n");
-		exit(1);
+		char filename[max_filename_length+10];
+		filename[0] = '\0';
+		strcat(filename, "Textures/");
+		strcat(filename, texture_filenames[i]);
+		bool is_bump_map = false;
+		if(!texture_images[i].loadTGA(filename))
+		{
+			printf("Failed to load texture: %s.\n", texture_filenames[i]);
+			exit(1);
+		}
+		if(strstr(texture_filenames[i], "bump") != NULL)
+			is_bump_map = true;
+
+		if(is_bump_map)
+			glActiveTexture(GL_TEXTURE1);
+		else
+			glActiveTexture(GL_TEXTURE0);
+
+		glGenTextures( 1, &gl_textures[i]);
+		glBindTexture( GL_TEXTURE_2D, gl_textures[i] );
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, texture_images[i].width, texture_images[i].height, 
+					0, (texture_images[i].byteCount == 3) ? GL_BGR : GL_BGRA, 
+					GL_UNSIGNED_BYTE, texture_images[i].data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+    	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	}
-    
-	glActiveTexture(GL_TEXTURE0);
-    glGenTextures( 1, &texture_cube );
-    glBindTexture( GL_TEXTURE_2D, texture_cube );
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, coolImage.width, coolImage.height, 0,
-                 (coolImage.byteCount == 3) ? GL_BGR : GL_BGRA,
-                 GL_UNSIGNED_BYTE, coolImage.data );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    
-    
-    glGenTextures( 1, &texture_earth );
-    glBindTexture( GL_TEXTURE_2D, texture_earth );
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, earthImage.width, earthImage.height, 0,
-                 (earthImage.byteCount == 3) ? GL_BGR : GL_BGRA,
-                 GL_UNSIGNED_BYTE, earthImage.data );
-    
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    
-    // Set texture sampler variable to texture unit 0
-    // (set in glActiveTexture(GL_TEXTURE0))
-   
-	glActiveTexture(GL_TEXTURE1);
-    glGenTextures( 1, &texture_bump );
-    glBindTexture( GL_TEXTURE_2D, texture_bump );
-
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, bumpImage.width, bumpImage.height, 0,
-                 (bumpImage.byteCount == 3) ? GL_BGR : GL_BGRA,
-                 GL_UNSIGNED_BYTE, bumpImage.data );
-	glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-
-
  
     glUniform1i( uTex, 0);
 	glUniform1i( uBumpTex, 1);
@@ -383,7 +366,7 @@ void display(void)
     // Previously glScalef(3,3,3);
 	mvstack.push(model_view);
 	model_view *= RotateY(20.0f * TIME);
-    model_view *= Scale(3.0f, 3.0f, 3.0f);
+    model_view *= Scale(3.0f, 6.0f, 3.0f);
     drawCube();
 	model_view = mvstack.pop();
 
