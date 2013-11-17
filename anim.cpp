@@ -168,12 +168,20 @@ void drawMCube(void)
 // centered around the origin.
 void drawSphere(void)
 {
+	glActiveTexture(GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, gl_textures[3]);
     glUniform1i( uEnableTex, 1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, gl_textures[4] );
+    glUniform1i ( uEnableBumpTex, 1);
+
+
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( sphereData.vao );
     glDrawArrays( GL_TRIANGLES, 0, sphereData.numVertices );
     glUniform1i( uEnableTex, 0 );
+    glUniform1i( uEnableBumpTex, 0);
+    glActiveTexture(GL_TEXTURE0);
 }
 
 // Resets the mouse to starting posisition?
