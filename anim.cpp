@@ -43,6 +43,8 @@
 // Framsaver Variables
 FrameSaver FrSaver ;
 Timer TM ;
+float FPS;
+float numFrames;
 // Arcball Variables
 BallData *Arcball = NULL ;
 int Width = 800;
@@ -269,6 +271,7 @@ void myKey(unsigned char key, int x, int y)
     switch (key) {
         case 'q':
         case 27:
+			printf("\n");
             exit(0); 
         case 's':
             FrSaver.DumpPPM(Width,Height) ;
@@ -281,6 +284,7 @@ void myKey(unsigned char key, int x, int y)
             Animate = 1 - Animate ;
             // reset the timer to point to the current time		
             time = TM.GetElapsedTime() ;
+			numFrames = 0.0;
             TM.Reset() ;
             // printf("Elapsed time %f\n", time) ;
             break ;
@@ -408,7 +412,8 @@ void myinit(void)
 
     load_textures();
 	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -15.0f;
-    
+	FPS = 0.0; numFrames = 0.0;  
+
     Arcball = new BallData;
     Ball_Init(Arcball);
     Ball_Place(Arcball,qOne,0.75);
@@ -428,6 +433,9 @@ void set_colour(float r, float g, float b)
 // Display Function (Primary Changes)
 void display(void)
 {
+	numFrames += 1.0;
+	FPS = numFrames/TIME;
+
     // Clear the screen with the background colour (set in myinit)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -514,6 +522,7 @@ void instructions()
     printf("  a to toggle the animation.\n") ;
     printf("  m to toggle frame dumping.\n") ;
     printf("  q to quit.\n");
+	printf("  i/k, j/l, u/o, to manually move the camera.\n");
 }
 
 // start or end interaction
@@ -573,17 +582,18 @@ void idleCB(void)
 {
     if( Animate == 1 )
     {
-        // TM.Reset() ; // commenting out this will make the time run from 0
+        //TM.Reset() ; // commenting out this will make the time run from 0
         // leaving 'Time' counts the time interval between successive calls to idleCB
         if( Recording == 0 )
             TIME = TM.GetElapsedTime() ;
         else
-            TIME += 0.033 ; // save at 30 frames per second.
-        
+            TIME += 0.033 ; // save at 30 frames per second.        
+
         eye.x = 20*sin(TIME);
         eye.z = 20*cos(TIME);
         
-        printf("TIME %f\n", TIME) ;
+        printf("\rTIME:  %.2fs  FPS:  %.2f      ", TIME, FPS) ;
+		fflush(stdout);
         glutPostRedisplay() ; 
     }
 }
