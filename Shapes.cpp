@@ -205,8 +205,8 @@ void generateWedge(GLuint program, ShapeData *wedgeData)
 	wQuad( 1, 0, 3, 2, point3( 0.0f, 0.0f, 1.0f), 0);
 	wQuad( 2, 3, 7, 6, point3( 1.0f, 0.0f, 0.0f), 1);
 	wQuad( 6, 7, 0, 1, point3( -sqrt(1.0/2), 0.0f, -sqrt(1.0/2)), 2);
-	wTriangle(1, 2, 6, point3(0.0f, -1.0f, 0.0f));
-	wTriangle(0, 3, 7, point3(0.0f, 1.0f, 0.0f));
+	wTriangle(1, 2, 6, point3(0.0f, 0.0, 1.0f));
+	wTriangle(0, 3, 7, point3(0.0f, 0.0f,-1.0f));
 
 	wedgeData->numVertices = numWedgeVertices;
 

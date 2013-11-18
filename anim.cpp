@@ -72,14 +72,15 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 5;
+const int max_textures = 6;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
 			"cobblestone_bump.tga",	//1
 			"colorcube.tga",		//2
 			"moon.tga",				//3
-			"moon_bump.tga"			//4
+			"moon_bump.tga",		//4
+			"colorwedge.tga"		//5
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -143,36 +144,63 @@ void drawCone(void)
 }
 
 
-// this function draws a cube with dimensions 1,1,1
-// centered around the origin.
+// CUBE DRAW METHODS ////////////////////////////////////////////////
 void drawCube(void)
 {
-	glActiveTexture(GL_TEXTURE0);
-    glBindTexture( GL_TEXTURE_2D, gl_textures[0] );
-    glUniform1i( uEnableTex, 1 );
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture( GL_TEXTURE_2D, gl_textures[1] );
-	glUniform1i ( uEnableBumpTex, 1);
-
-    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
+	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( cubeData.vao );
     glDrawArrays( GL_TRIANGLES, 0, cubeData.numVertices );
-    glUniform1i( uEnableTex, 0 );
-	glUniform1i( uEnableBumpTex, 0);
-	glActiveTexture(GL_TEXTURE0);
 }
 
+void drawCube(GLuint diffuse)
+{
+	glBindTexture( GL_TEXTURE_2D, diffuse);
+	glUniform1i( uEnableTex, 1);
+	drawCube();
+	glUniform1i( uEnableTex, 0);	
+}
+
+void drawCube( GLuint diffuse, GLuint bump)
+{
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture( GL_TEXTURE_2D, bump);
+	glUniform1i( uEnableBumpTex, 1);
+	glActiveTexture(GL_TEXTURE0);
+	drawCube(diffuse);
+	glUniform1i( uEnableBumpTex, 0);
+}
+
+// MCUBE DRAW METHODS ///////////////////////////////////////////////
 void drawMCube(void)
 {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture( GL_TEXTURE_2D, gl_textures[2]);
-	glUniform1i( uEnableTex, 1);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture( GL_TEXTURE_2D, gl_textures[2]);
+	//glUniform1i( uEnableTex, 1);
 	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
 	glBindVertexArray( mCubeData.vao );
 	glDrawArrays( GL_TRIANGLES, 0, mCubeData.numVertices );
-	glUniform1i( uEnableTex, 0);
+	//glUniform1i( uEnableTex, 0);
 }
 
+void drawMCube(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawMCube();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawMCube( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawMCube(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
+// WEDGE DRAW METHODS ///////////////////////////////////////////////
 void drawWedge(void)
 {
 	glUniformMatrix4fv(uModelView, 1, GL_TRUE, model_view);
@@ -180,25 +208,52 @@ void drawWedge(void)
 	glDrawArrays( GL_TRIANGLES, 0, wedgeData.numVertices );
 }
 
+void drawWedge(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawWedge();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawWedge( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawWedge(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
+// SPHERE DRAW METHODS //////////////////////////////////////////////
 // This function draws a sphere with radius 1
 // centered around the origin.
 void drawSphere(void)
 {
-	glActiveTexture(GL_TEXTURE0);
-    glBindTexture( GL_TEXTURE_2D, gl_textures[3]);
-    glUniform1i( uEnableTex, 1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture( GL_TEXTURE_2D, gl_textures[4] );
-    glUniform1i ( uEnableBumpTex, 1);
-
-
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( sphereData.vao );
     glDrawArrays( GL_TRIANGLES, 0, sphereData.numVertices );
-    glUniform1i( uEnableTex, 0 );
-    glUniform1i( uEnableBumpTex, 0);
-    glActiveTexture(GL_TEXTURE0);
 }
+
+void drawSphere(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawSphere();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawSphere( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawSphere(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
 
 // Resets the mouse to starting posisition?
 void resetArcball()
@@ -249,10 +304,10 @@ void myKey(unsigned char key, int x, int y)
         case '?':
             instructions();
             break;
-		case 'i':
+		case 'o':
 			Camera.z += 0.2;
 			break;
-		case 'k':
+		case 'u':
 			Camera.z -= 0.2;
 			break;
 		case 'j':
@@ -260,6 +315,12 @@ void myKey(unsigned char key, int x, int y)
 			break;
 		case 'l':
 			Camera.x += 0.2;
+			break;
+		case 'i':
+			Camera.y += 0.2;
+			break;
+		case 'k':
+			Camera.y -= 0.2;
 			break;
     }
     glutPostRedisplay() ;
@@ -373,7 +434,7 @@ void display(void)
     model_view = mat4(1.0f);
     
     
-    model_view *= Translate(Camera.x, Camera.y, Camera.z);
+    //model_view *= Translate(Camera.x, Camera.y, Camera.z);
     HMatrix r;
     Ball_Value(Arcball,r);
 
@@ -383,7 +444,9 @@ void display(void)
         r[2][0], r[2][1], r[2][2], r[2][3],
         r[3][0], r[3][1], r[3][2], r[3][3]);
     model_view *= mat_arcball_rot;
+	model_view *= Translate(Camera.x, Camera.y, Camera.z);
     
+
     mat4 view = model_view;
     
     
@@ -405,7 +468,7 @@ void display(void)
 	mvstack.push(model_view);
 	model_view *= RotateY(20.0f * TIME);
     model_view *= Scale(3.0f, 6.0f, 3.0f);
-    drawCube();
+    drawCube(gl_textures[0], gl_textures[1]);
 	model_view = mvstack.pop();
 
     // And extra shapes!
@@ -418,11 +481,11 @@ void display(void)
     set_colour(1.0f, 1.0f, 1.0f);
     drawCylinder();
 
-	model_view *= Translate(-3.0f, 0.0f, 0.0f);
-	drawMCube();
+	model_view *= Translate(-6.0f, 0.0f, 0.0f);
+	drawMCube(gl_textures[2]);
 
-	model_view *= Translate(-3.0f, 0.0f, 0.0f);
-	drawWedge();
+	model_view *= Translate(3.0f, 0.0f, 0.0f);
+	drawWedge(gl_textures[5]);
 
     glutSwapBuffers();
     if(Recording == 1)
