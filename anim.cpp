@@ -103,6 +103,14 @@ GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex;
 Angel::vec4 eye{0, 0.0, 50.0,1.0};
 Angel::vec4 ref{0.0, 0.0, 0.0,1.0};
 Angel::vec4 up{0.0,1.0,0.0,0.0};
+struct Cam 
+{
+	double x;
+	double y;
+	double z;
+};
+
+Cam Camera;
 // Time variable
 double TIME = 0.0 ;
 
@@ -241,6 +249,18 @@ void myKey(unsigned char key, int x, int y)
         case '?':
             instructions();
             break;
+		case 'i':
+			Camera.z += 0.2;
+			break;
+		case 'k':
+			Camera.z -= 0.2;
+			break;
+		case 'j':
+			Camera.x -= 0.2;
+			break;
+		case 'l':
+			Camera.x += 0.2;
+			break;
     }
     glutPostRedisplay() ;
 
@@ -326,6 +346,7 @@ void myinit(void)
     glEnable(GL_DEPTH_TEST);
 
     load_textures();
+	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -15.0f;
     
     Arcball = new BallData;
     Ball_Init(Arcball);
@@ -352,7 +373,7 @@ void display(void)
     model_view = mat4(1.0f);
     
     
-    model_view *= Translate(0.0f, 0.0f, -15.0f);
+    model_view *= Translate(Camera.x, Camera.y, Camera.z);
     HMatrix r;
     Ball_Value(Arcball,r);
 
@@ -524,6 +545,7 @@ int main(int argc, char** argv)
     glutIdleFunc(idleCB) ;
     glutReshapeFunc (myReshape);
     glutKeyboardFunc( myKey );
+	//glutSpecialFunc(myKey);
     glutMouseFunc(myMouseCB) ;
     glutMotionFunc(myMotionCB) ;
     instructions();
