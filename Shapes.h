@@ -17,5 +17,6 @@ void generateMCube(GLuint program, ShapeData* cubeData);
 void generateSphere(GLuint program, ShapeData* sphereData);
 void generateCone(GLuint program, ShapeData* coneData);
 void generateCylinder(GLuint program, ShapeData* cylData);
+void generateWedge(GLuint program, ShapeData* wedgeData);
 
 #endif

@@ -42,6 +42,7 @@ void setVertexAttrib(GLuint program,
     glBindVertexArray(0);
 }
 
+
 //----------------------------------------------------------------------------
 // Cube (Uniform)
 
@@ -162,6 +163,64 @@ void generateMCube(GLuint program, ShapeData* cubeData)
         (float*)mCubeNormals, sizeof(mCubeNormals),
         (float*)mCubeUV,      sizeof(mCubeUV));
 }
+
+// Wedge
+
+const int numWedgeVertices = 24; //((3 faces)(2 traingles) + (2 faces)(1 triangle))*(3 points/triangle)
+
+point4 wedgePoints	[numWedgeVertices];
+point3 wedgeNormals	[numWedgeVertices];
+point2 wedgeUV		[numWedgeVertices];
+
+int wIndex = 0;
+void wQuad( int a, int b, int c, int d, const point3 &normal, int face)
+{
+	wedgePoints[wIndex] = vertices [a]; wedgeNormals[wIndex] = normal;
+	wedgeUV[wIndex] = point2(face*(1.0/4), 1.0f); wIndex++;
+    wedgePoints[wIndex] = vertices [b]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2(face*(1.0/4), 0.0f); wIndex++;
+    wedgePoints[wIndex] = vertices [c]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2((face+1)*(1.0/4), 0.0f); wIndex++;
+    wedgePoints[wIndex] = vertices [a]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2(face*(1.0/4), 1.0f); wIndex++;
+    wedgePoints[wIndex] = vertices [c]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2((face+1)*(1.0/4), 0.0f); wIndex++;
+    wedgePoints[wIndex] = vertices [d]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2((face+1)*(1.0/4), 1.0f); wIndex++;
+}
+
+void wTriangle( int a, int b, int c, const point3 &normal)
+{
+	wedgePoints[wIndex] = vertices[a]; wedgeNormals[wIndex] = normal;
+	wedgeUV[wIndex] = point2(3.0/4, 1.0f); wIndex++;
+    wedgePoints[wIndex] = vertices[b]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2(3.0/4, 0.0f); wIndex++;
+    wedgePoints[wIndex] = vertices[c]; wedgeNormals[wIndex] = normal;
+    wedgeUV[wIndex] = point2(1.0f, 1.0f); wIndex++;
+
+}
+
+void generateWedge(GLuint program, ShapeData *wedgeData)
+{
+	wQuad( 1, 0, 3, 2, point3( 0.0f, 0.0f, 1.0f), 0);
+	wQuad( 2, 3, 7, 6, point3( 1.0f, 0.0f, 0.0f), 1);
+	wQuad( 6, 7, 0, 1, point3( -sqrt(1.0/2), 0.0f, -sqrt(1.0/2)), 2);
+	wTriangle(1, 2, 6, point3(0.0f, -1.0f, 0.0f));
+	wTriangle(0, 3, 7, point3(0.0f, 1.0f, 0.0f));
+
+	wedgeData->numVertices = numWedgeVertices;
+
+	glGenVertexArrays( 1, &wedgeData->vao);
+	glBindVertexArray( wedgeData->vao);
+	
+	setVertexAttrib( program, 
+        (float*)wedgePoints,  sizeof(wedgePoints),
+        (float*)wedgeNormals, sizeof(wedgeNormals),
+        (float*)wedgeUV,      sizeof(wedgeUV));
+
+}
+
+
 
 //----------------------------------------------------------------------------
 // Sphere approximation by recursive subdivision of a tetrahedron

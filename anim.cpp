@@ -91,6 +91,7 @@ ShapeData sphereData;
 ShapeData coneData;
 ShapeData cylData;
 ShapeData mCubeData;
+ShapeData wedgeData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -162,6 +163,13 @@ void drawMCube(void)
 	glBindVertexArray( mCubeData.vao );
 	glDrawArrays( GL_TRIANGLES, 0, mCubeData.numVertices );
 	glUniform1i( uEnableTex, 0);
+}
+
+void drawWedge(void)
+{
+	glUniformMatrix4fv(uModelView, 1, GL_TRUE, model_view);
+	glBindVertexArray( wedgeData.vao );
+	glDrawArrays( GL_TRIANGLES, 0, wedgeData.numVertices );
 }
 
 // This function draws a sphere with radius 1
@@ -290,6 +298,7 @@ void myinit(void)
     generateCone(program, &coneData);
     generateCylinder(program, &cylData);
 	generateMCube(program, &mCubeData);
+	generateWedge(program, &wedgeData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -390,6 +399,9 @@ void display(void)
 
 	model_view *= Translate(-3.0f, 0.0f, 0.0f);
 	drawMCube();
+
+	model_view *= Translate(-3.0f, 0.0f, 0.0f);
+	drawWedge();
 
     glutSwapBuffers();
     if(Recording == 1)
