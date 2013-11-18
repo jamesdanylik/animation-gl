@@ -294,12 +294,12 @@ void myKey(unsigned char key, int x, int y)
         case 'm':
             if( Recording == 1 )
             {
-                printf("Frame recording disabled.\n") ;
+                //printf("Frame recording disabled.\n") ;
                 Recording = 0 ;
             }
             else
             {
-                printf("Frame recording enabled.\n") ;
+                //printf("Frame recording enabled.\n") ;
                 Recording = 1  ;
             }
             FrSaver.Toggle(Width);
@@ -592,7 +592,11 @@ void idleCB(void)
         eye.x = 20*sin(TIME);
         eye.z = 20*cos(TIME);
         
-        printf("\rTIME:  %.2fs  FPS:  %.2f      ", TIME, FPS) ;
+        printf("\rTIME:  %.2fs  FPS:  %.2f  ", TIME, FPS) ;
+		if (Recording)
+			printf("[REC]  ");
+		else
+			printf("       ");
 		fflush(stdout);
         glutPostRedisplay() ; 
     }
