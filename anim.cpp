@@ -74,7 +74,7 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 6;
+const int max_textures = 7;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -82,7 +82,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"colorcube.tga",		//2
 			"moon.tga",				//3
 			"moon_bump.tga",		//4
-			"colorwedge.tga"		//5
+			"colorwedge.tga",		//5
+			"colorpyramid.tga"		//6
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -95,6 +96,7 @@ ShapeData coneData;
 ShapeData cylData;
 ShapeData mCubeData;
 ShapeData wedgeData;
+ShapeData pyramidData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -123,14 +125,29 @@ double TIME = 0.0 ;
 // The bases of the cylinder are placed at Z = 0, and at Z = 1
 void drawCylinder(void)
 {
-    //glBindTexture( GL_TEXTURE_2D, texture_cube );
-    //glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( cylData.vao );
     glDrawArrays( GL_TRIANGLES, 0, cylData.numVertices );
-	//glUniform1i( uEnableTex, 0);
-
 }
+
+void drawCylinder(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawCylinder();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawCylinder(GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawCylinder(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
 
 // Render a solid cone oriented along the Z axis with base radius 1. 
 // The base of the cone is placed at Z = 0, and the top at Z = 1. 
@@ -143,6 +160,32 @@ void drawCone(void)
     glBindVertexArray( coneData.vao );
     glDrawArrays( GL_TRIANGLES, 0, coneData.numVertices );
 	//glUniform1i( uEnableTex, 0);
+}
+
+// PYRAMID DRAW FUNCTIONS ///////////////////////////////////////////
+void drawPyramid(void)
+{
+	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
+	glBindVertexArray( pyramidData.vao );
+	glDrawArrays( GL_TRIANGLES, 0, pyramidData.numVertices);
+}
+
+void drawPyramid(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+	drawPyramid();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawPyramid(GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+	drawPyramid(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
 }
 
 
@@ -384,6 +427,7 @@ void myinit(void)
     generateCylinder(program, &cylData);
 	generateMCube(program, &mCubeData);
 	generateWedge(program, &wedgeData);
+	generatePyramid(program, &pyramidData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -467,7 +511,7 @@ void display(void)
 
     // Draw Something
     set_colour(0.8f, 0.8f, 0.8f);
-    drawSphere();
+    drawSphere(gl_textures[2]);
 
     // Previously glTranslatef(3,0,0);
     model_view *= Translate(3.0f, 0.0f, 0.0f);
@@ -487,13 +531,16 @@ void display(void)
 
     model_view *= Translate(-9.0f, 0.0f, 0.0f);
     set_colour(1.0f, 1.0f, 1.0f);
-    drawCylinder();
+    drawCylinder(gl_textures[2]);
 
-	model_view *= Translate(-6.0f, 0.0f, 0.0f);
+	model_view *= Translate(-3.0f, 0.0f, 0.0f);
 	drawMCube(gl_textures[2]);
 
-	model_view *= Translate(3.0f, 0.0f, 0.0f);
+	model_view *= Translate(-3.0f, 0.0f, 0.0f);
 	drawWedge(gl_textures[5]);
+
+	model_view *= Translate(-3.0f, 0.0f, 0.0f);
+	drawPyramid(gl_textures[6]);
 
     glutSwapBuffers();
     if(Recording == 1)

@@ -222,15 +222,21 @@ void generateWedge(GLuint program, ShapeData *wedgeData)
 }
 
 // Pyramid //////////////////////////////////////////////////////////
-/*
-const int numPyrVerticies = 18; //( (1 face)(2 triangles) + (4 faces)(1 triangle) ) 
+
+const int numPyrVertices = 18; //( (1 face)(2 triangles) + (4 faces)(1 triangle) ) 
 								//* 3 points/traingle
 
-point4 pVertices[5] 
+point4 pVertices[5] = {
+	point4( -0.5, -0.25, -0.5, 1.0), //0
+	point4( -0.5, -0.25,  0.5, 1.0), //1
+	point4(  0.5, -0.25,  0.5, 1.0), //2
+	point4(  0.5, -0.25, -0.5, 1.0), //3
+	point4(  0.0,  0.25,  0.0, 1.0), //4
+};
 
-point4 pyrPoints	[numPyrVerticies];
-point3 pyrNormals	[numPyrVerticies];
-point2 pyrUV		[numPyrVerticies];
+point4 pyrPoints	[numPyrVertices];
+point3 pyrNormals	[numPyrVertices];
+point2 pyrUV		[numPyrVertices];
 
 
 
@@ -238,9 +244,47 @@ int pIndex = 0;
 
 void pTriangle( int a, int b, int c, const point3 &normal)
 {
-	pyrPoints[pIndex] = 
+	pyrPoints[pIndex] = pVertices[a]; pyrNormals[pIndex] = normal;
+	pyrUV[pIndex] = point2(0.0, 1.0f); pIndex++;
+	pyrPoints[pIndex] = pVertices[b]; pyrNormals[pIndex] = normal;
+	pyrUV[pIndex] = point2(0.0, 0.0f); pIndex++;
+	pyrPoints[pIndex] = pVertices[c]; pyrNormals[pIndex] = normal;
+	pyrUV[pIndex] = point2(1.0/2, 0.0f); pIndex++;
 }
-*/
+
+void generatePyramid(GLuint program, ShapeData *pyramidData)
+{
+	pTriangle( 0, 1, 4, point3( -sqrt(1.0/2), sqrt(1.0/2), 0.0f) );
+	pTriangle( 1, 2, 4, point3( 0.0f, sqrt(1.0/2), sqrt(1.0/2) ) );
+	pTriangle( 2, 3, 4, point3( sqrt(1.0/2), sqrt(1.0/2), 0.0f)  );
+	pTriangle( 3, 0, 4, point3( 0.0f, sqrt(1.0/2), -sqrt(1.0/2)) );
+
+	point3 bottomNormal = point3(0.0f, -1.0f, 0.0f);
+
+	pyrPoints[pIndex] = pVertices[0]; pyrNormals[pIndex] = bottomNormal;
+	pyrUV[pIndex] = point2(1.0/2, 1.0f); pIndex++;
+	pyrPoints[pIndex] = pVertices[1]; pyrNormals[pIndex] = bottomNormal;
+	pyrUV[pIndex] = point2(1.0/2, 0.0f); pIndex++;
+    pyrPoints[pIndex] = pVertices[2]; pyrNormals[pIndex] = bottomNormal;
+    pyrUV[pIndex] = point2(1.0f, 0.0f); pIndex++;
+    pyrPoints[pIndex] = pVertices[0]; pyrNormals[pIndex] = bottomNormal;
+    pyrUV[pIndex] = point2(1.0/2, 1.0f); pIndex++;
+    pyrPoints[pIndex] = pVertices[2]; pyrNormals[pIndex] = bottomNormal;
+    pyrUV[pIndex] = point2(1.0f, 0.0f); pIndex++;
+    pyrPoints[pIndex] = pVertices[3]; pyrNormals[pIndex] = bottomNormal;
+    pyrUV[pIndex] = point2(1.0, 1.0f); pIndex++;
+
+	pyramidData->numVertices = numPyrVertices;
+	
+	glGenVertexArrays( 1, &pyramidData->vao );
+	glBindVertexArray( pyramidData->vao );
+	
+	setVertexAttrib( program,
+        (float*)pyrPoints,  sizeof(pyrPoints),
+        (float*)pyrNormals, sizeof(pyrNormals),
+        (float*)pyrUV,      sizeof(pyrUV));
+
+}
 
 //----------------------------------------------------------------------------
 // Sphere approximation by recursive subdivision of a tetrahedron
@@ -433,7 +477,7 @@ const int numCylVertices = numCylDivisions * 12;
 
 point4 cylPoints [numCylVertices];
 point3 cylNormals[numCylVertices];
-//point2 cylUVs[numCylVerticies];
+point2 cylUV[numCylVertices];
 
 void generateCylinder(GLuint program, ShapeData* cylData)
 {
@@ -460,6 +504,59 @@ void generateCylinder(GLuint program, ShapeData* cylData)
         cylPoints[Index] = p2; cylNormals[Index] = point3(p2.x, p2.y, 0.0f); Index++;
         cylPoints[Index] = p3; cylNormals[Index] = point3(p3.x, p3.y, 0.0f); Index++;
     }
+
+	// texture coords
+	double u1, v1, u2, v2, u3, v3;
+	for ( int i = 0; i < numCylVertices/3; i++)
+	{
+		if ( i*3 < numCylDivisions * 6)
+		{
+			u1 = 0.5*(atan2(cylPoints[i*3].x, cylPoints[i*3].y)/(M_PI) + 1);
+            u2 = u1;
+            u3 = 0.5*(atan2(cylPoints[(i*3)+2].x, cylPoints[(i*3)+2].y)/(M_PI) + 1);
+            if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
+                u3 += 1.0;
+            else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
+                u3 -= 1.0;
+
+
+			v1 = 1.0f;
+			v2 = 0.0f;
+			v3 = 1.0f;
+
+            cylUV[(i*3)] = point2( u1,v1 );
+            cylUV[(i*3)+1] = point2( u2,v2 );
+            cylUV[(i*3)+2] = point2( u3,v3 );
+
+		}
+		else 
+		{
+			//cylUV[(i*3)] = point2((cylPoints[i*3].z)/2, acos(cylPoints[i*3].x)/(2*M_PI));
+			//cylUV[(i*3)+1] = point2((cylPoints[(i*3)+1].z)/2, acos(cylPoints[(i*3)+1].x)/(2*M_PI));
+			//cylUV[(i*3)+2] = point2((cylPoints[(i*3)+2].z)/2, acos(cylPoints[(i*3)+2].x)/(2*M_PI));
+			u1 = 0.5*(atan2(cylPoints[i*3].x, cylPoints[i*3].y)/(M_PI) + 1);
+			v1 = (cylPoints[i*3].z)/2;
+
+			u2 = 0.5*(atan2(cylPoints[(i*3)+1].x, cylPoints[(i*3)+1].y)/(M_PI) + 1);
+			v2 = (cylPoints[(i*3)+1].z)/2;
+			if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
+            	u2 += 1.0;
+		    else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
+            	u2 -= 1.0;
+
+
+			u3 = 0.5*(atan2(cylPoints[(i*3)+2].x, cylPoints[(i*3)+2].y)/(M_PI) + 1);
+			v3 = (cylPoints[(i*3)+2].z)/2;
+	        if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
+    	        u3 += 1.0;
+	        else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
+	            u3 -= 1.0;
+
+            cylUV[(i*3)] = point2( u1,v1 );
+            cylUV[(i*3)+1] = point2( u2,v2 );
+            cylUV[(i*3)+2] = point2( u3,v3 );
+		}
+	}
     
     cylData->numVertices = numCylVertices;
     
@@ -471,7 +568,7 @@ void generateCylinder(GLuint program, ShapeData* cylData)
     setVertexAttrib(program,
                     (float*)cylPoints,  sizeof(cylPoints),
                     (float*)cylNormals, sizeof(cylNormals),
-                    0, 0);
+                    (float*)cylUV, sizeof(cylUV));
 }
 
 
