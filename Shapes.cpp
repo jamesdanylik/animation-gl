@@ -416,7 +416,7 @@ const int numConeVertices = numConeDivisions * 6;
 
 point4 conePoints [numConeVertices];
 point3 coneNormals[numConeVertices];
-//point2 coneUVs[numConeVertices];
+point2 coneUV[numConeVertices];
 
 point2 circlePoints[numConeDivisions];
 
@@ -455,6 +455,29 @@ void generateCone(GLuint program, ShapeData* coneData)
     int Index = 0;
     makeConeWall(conePoints, coneNormals, numConeDivisions, 1.0f, 1.0f, Index, 1);
     makeConeWall(conePoints, coneNormals, numConeDivisions, 1.0f, -1.0f, Index, -1);
+
+    double u1, v1, u2, v2, u3, v3;
+    for ( int i = 0; i < numConeVertices/3; i++)
+    {
+            u1 = 0.5*(atan2(conePoints[i*3].x, conePoints[i*3].y)/(M_PI) + 1);
+            u2 = u1;
+            u3 = 0.5*(atan2(conePoints[(i*3)+2].x, conePoints[(i*3)+2].y)/(M_PI) + 1);
+            if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
+                u3 += 1.0;
+            else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
+                u3 -= 1.0;
+
+
+            v1 = 1.0f;
+            v2 = 0.0f;
+            v3 = 1.0f;
+
+            coneUV[(i*3)] = point2( u1,v1 );
+            coneUV[(i*3)+1] = point2( u2,v2 );
+            coneUV[(i*3)+2] = point2( u3,v3 );
+
+    }
+
     
     coneData->numVertices = numConeVertices;
 
@@ -466,7 +489,7 @@ void generateCone(GLuint program, ShapeData* coneData)
     setVertexAttrib(program,
                     (float*)conePoints,  sizeof(conePoints),
                     (float*)coneNormals, sizeof(coneNormals),
-                    0, 0);
+                    (float*)coneUV, sizeof(coneUV));
 }
 
 //----------------------------------------------------------------------------

@@ -148,21 +148,36 @@ void drawCylinder(GLuint diffuse, GLuint bump)
     glUniform1i( uEnableBumpTex, 0);
 }
 
-
+// CONE DRAW METHODS/////////////////////////////////////////////////
 // Render a solid cone oriented along the Z axis with base radius 1. 
 // The base of the cone is placed at Z = 0, and the top at Z = 1. 
 void drawCone(void)
 {
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture( GL_TEXTURE_2D, texture_cube );
-	//glUniform1i( uEnableTex, 1 );
     glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
     glBindVertexArray( coneData.vao );
     glDrawArrays( GL_TRIANGLES, 0, coneData.numVertices );
-	//glUniform1i( uEnableTex, 0);
 }
 
-// PYRAMID DRAW FUNCTIONS ///////////////////////////////////////////
+void drawCone(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawCone();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawCone(GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawCone(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
+
+// PYRAMID DRAW METHODS /////////////////////////////////////////////
 void drawPyramid(void)
 {
 	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
@@ -218,13 +233,9 @@ void drawCube( GLuint diffuse, GLuint bump)
 // MCUBE DRAW METHODS ///////////////////////////////////////////////
 void drawMCube(void)
 {
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture( GL_TEXTURE_2D, gl_textures[2]);
-	//glUniform1i( uEnableTex, 1);
 	glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
 	glBindVertexArray( mCubeData.vao );
 	glDrawArrays( GL_TRIANGLES, 0, mCubeData.numVertices );
-	//glUniform1i( uEnableTex, 0);
 }
 
 void drawMCube(GLuint diffuse)
@@ -526,8 +537,8 @@ void display(void)
     // And extra shapes!
     //model_view *= Scale(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f);
     model_view *= Translate(3.0f, 0.0f, 0.0f);
-    set_colour(1.0f, 1.0f, 0.0f);
-    drawCone();
+    //set_colour(1.0f, 1.0f, 0.0f);
+    drawCone(gl_textures[2]);
 
     model_view *= Translate(-9.0f, 0.0f, 0.0f);
     set_colour(1.0f, 1.0f, 1.0f);
