@@ -21,7 +21,7 @@ void setVertexAttrib(GLuint program,
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
-    glBindBuffer( GL_ARRAY_BUFFER, buffer[1] );
+	glBindBuffer( GL_ARRAY_BUFFER, buffer[1] );
     glBufferData( GL_ARRAY_BUFFER, nsize, normals, GL_STATIC_DRAW );
     GLuint vNormal = glGetAttribLocation( program, "vNormal" );
     glEnableVertexAttribArray( vNormal );
@@ -164,9 +164,10 @@ void generateMCube(GLuint program, ShapeData* cubeData)
         (float*)mCubeUV,      sizeof(mCubeUV));
 }
 
-// Wedge
+// Wedge ////////////////////////////////////////////////////////////
 
-const int numWedgeVertices = 24; //((3 faces)(2 traingles) + (2 faces)(1 triangle))*(3 points/triangle)
+const int numWedgeVertices = 24; //((3 faces)(2 traingles) 
+            //+ (2 faces)(1 triangle))*(3 points/triangle)
 
 point4 wedgePoints	[numWedgeVertices];
 point3 wedgeNormals	[numWedgeVertices];
@@ -205,8 +206,8 @@ void generateWedge(GLuint program, ShapeData *wedgeData)
 	wQuad( 1, 0, 3, 2, point3( 0.0f, 0.0f, 1.0f), 0);
 	wQuad( 2, 3, 7, 6, point3( 1.0f, 0.0f, 0.0f), 1);
 	wQuad( 6, 7, 0, 1, point3( -sqrt(1.0/2), 0.0f, -sqrt(1.0/2)), 2);
-	wTriangle(1, 2, 6, point3(0.0f, 0.0, 1.0f));
-	wTriangle(0, 3, 7, point3(0.0f, 0.0f,-1.0f));
+	wTriangle(1, 2, 6, point3(0.0f, 1.0f, 0.0f));
+	wTriangle(0, 3, 7, point3(0.0f, -1.0f,0.0f));
 
 	wedgeData->numVertices = numWedgeVertices;
 
@@ -220,7 +221,26 @@ void generateWedge(GLuint program, ShapeData *wedgeData)
 
 }
 
+// Pyramid //////////////////////////////////////////////////////////
+/*
+const int numPyrVerticies = 18; //( (1 face)(2 triangles) + (4 faces)(1 triangle) ) 
+								//* 3 points/traingle
 
+point4 pVertices[5] 
+
+point4 pyrPoints	[numPyrVerticies];
+point3 pyrNormals	[numPyrVerticies];
+point2 pyrUV		[numPyrVerticies];
+
+
+
+int pIndex = 0;
+
+void pTriangle( int a, int b, int c, const point3 &normal)
+{
+	pyrPoints[pIndex] = 
+}
+*/
 
 //----------------------------------------------------------------------------
 // Sphere approximation by recursive subdivision of a tetrahedron
