@@ -100,12 +100,13 @@ ShapeData cylData;
 ShapeData mCubeData;
 ShapeData wedgeData;
 ShapeData pyramidData;
+ShapeData iCubeData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
 GLint        uModelView, uProjection, uView;
 GLint        uAmbient, uDiffuse, uSpecular, uLightPos, uShininess;
-GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex;
+GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex, uEnableSkybox;
 // The eye point and look-at point.
 // Currently unused. Use to control a camera with LookAt().
 Angel::vec4 eye{0, 0.0, 50.0,1.0};
@@ -258,6 +259,33 @@ void drawMCube( GLuint diffuse, GLuint bump)
     drawMCube(diffuse);
     glUniform1i( uEnableBumpTex, 0);
 }
+
+// ICUBE DRAW METHODS ///////////////////////////////////////////////
+void drawICube(void)
+{
+    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
+    glBindVertexArray( iCubeData.vao );
+    glDrawArrays( GL_TRIANGLES, 0, iCubeData.numVertices );
+}
+
+void drawICube(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawICube();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawICube( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawICube(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
 
 // WEDGE DRAW METHODS ///////////////////////////////////////////////
 void drawWedge(void)
@@ -440,6 +468,7 @@ void myinit(void)
 	generateMCube(program, &mCubeData);
 	generateWedge(program, &wedgeData);
 	generatePyramid(program, &pyramidData);
+	generateICube(program, &iCubeData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -456,7 +485,7 @@ void myinit(void)
     uEnableTex = glGetUniformLocation( program, "EnableTex"       );
 	uBumpTex   = glGetUniformLocation( program, "BumpTex"		  );
 	uEnableBumpTex = glGetUniformLocation( program, "EnableBumpTex");
-
+	uEnableSkybox = glGetUniformLocation( program, "EnableSkybox");
 
     glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
@@ -467,7 +496,7 @@ void myinit(void)
     glEnable(GL_DEPTH_TEST);
 
     load_textures();
-	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -15.0f;
+	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -30.0f;
 	AV_FPS = 0.0; numFrames = 0.0; last_time = 0.0; 
 
     Arcball = new BallData;
@@ -494,6 +523,7 @@ void display(void)
 	INST_FPS = 1.0/ (PTM.GetElapsedTime());
 	PTM.Reset();
 	
+	//Camera.z = 5*sin(TIME)-20.0f;
 
     // Clear the screen with the background colour (set in myinit)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -523,6 +553,12 @@ void display(void)
 
     // Previously glScalef(Zoom, Zoom, Zoom);
     model_view *= Scale(Zoom);
+
+	model_view *= Scale(100.0f);
+	glUniform1i( uEnableSkybox, 1);
+	drawICube(gl_textures[2]);
+	glUniform1i( uEnableSkybox, 0);
+	model_view *= Scale(1/100.0);
 
     // Draw Something
     set_colour(0.8f, 0.8f, 0.8f);

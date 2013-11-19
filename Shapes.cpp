@@ -164,6 +164,60 @@ void generateMCube(GLuint program, ShapeData* cubeData)
         (float*)mCubeUV,      sizeof(mCubeUV));
 }
 
+// Interior Cube (Multiface) ////////////////////////////////////////
+const int numICubeVerticies = 36;
+point4  iCubePoints     [numICubeVerticies];
+point3  iCubeNormals    [numICubeVerticies];
+point2  iCubeUV         [numICubeVerticies];
+
+point4 iVertices[8] = vertices;
+
+int iIndex = 0;
+void iQuad( int a, int b, int c, int d, const point3& normal, int face)
+{
+    iCubePoints[iIndex] = iVertices[a]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2(face*(1.0/6), 1.0f); iIndex++;
+    iCubePoints[iIndex] = iVertices[b]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2(face*(1.0/6), 0.0f); iIndex++;
+    iCubePoints[iIndex] = iVertices[c]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2((face+1)*(1.0/6), 0.0f); iIndex++;
+    iCubePoints[iIndex] = iVertices[a]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2(face*(1.0/6), 1.0f); iIndex++;
+    iCubePoints[iIndex] = iVertices[c]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2((face+1)*(1.0/6), 0.0f); iIndex++;
+    iCubePoints[iIndex] = iVertices[d]; iCubeNormals[iIndex] = normal;
+    iCubeUV[iIndex] = point2((face+1)*(1.0/6), 1.0f); iIndex++;
+}
+
+void iColorcube()
+{
+    iQuad( 1, 0, 3, 2, point3( 0.0f,  0.0f, - 1.0f), 0 );
+    iQuad( 2, 3, 7, 6, point3( -1.0f,  0.0f,  0.0f), 1 );
+    iQuad( 3, 0, 4, 7, point3( 0.0f, 1.0f,  0.0f), 2 );
+    iQuad( 6, 5, 1, 2, point3( 0.0f,  -1.0f,  0.0f), 3 );
+    iQuad( 4, 5, 6, 7, point3( 0.0f,  0.0f, 1.0f), 4 );
+    iQuad( 5, 4, 0, 1, point3(1.0f,  0.0f,  0.0f), 5 );
+}
+
+// initialization
+void generateICube(GLuint program, ShapeData* iCubeData)
+{
+    iColorcube();
+    iCubeData->numVertices = numICubeVerticies;
+
+    // Create a vertex array object
+    glGenVertexArrays( 1, &iCubeData->vao );
+    glBindVertexArray( iCubeData->vao );
+
+    // Set vertex attributes
+    setVertexAttrib(program,
+        (float*)iCubePoints,  sizeof(iCubePoints),
+        (float*)iCubeNormals, sizeof(iCubeNormals),
+        (float*)iCubeUV,      sizeof(iCubeUV));
+}
+
+
+
 // Wedge ////////////////////////////////////////////////////////////
 
 const int numWedgeVertices = 24; //((3 faces)(2 traingles) 
@@ -558,10 +612,10 @@ void generateCylinder(GLuint program, ShapeData* cylData)
 			//cylUV[(i*3)+1] = point2((cylPoints[(i*3)+1].z)/2, acos(cylPoints[(i*3)+1].x)/(2*M_PI));
 			//cylUV[(i*3)+2] = point2((cylPoints[(i*3)+2].z)/2, acos(cylPoints[(i*3)+2].x)/(2*M_PI));
 			u1 = 0.5*(atan2(cylPoints[i*3].x, cylPoints[i*3].y)/(M_PI) + 1);
-			v1 = (cylPoints[i*3].z)/2;
+			v1 = (cylPoints[i*3].z+1)/2;
 
 			u2 = 0.5*(atan2(cylPoints[(i*3)+1].x, cylPoints[(i*3)+1].y)/(M_PI) + 1);
-			v2 = (cylPoints[(i*3)+1].z)/2;
+			v2 = (cylPoints[(i*3)+1].z+1)/2;
 			if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
             	u2 += 1.0;
 		    else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
@@ -569,7 +623,7 @@ void generateCylinder(GLuint program, ShapeData* cylData)
 
 
 			u3 = 0.5*(atan2(cylPoints[(i*3)+2].x, cylPoints[(i*3)+2].y)/(M_PI) + 1);
-			v3 = (cylPoints[(i*3)+2].z)/2;
+			v3 = (cylPoints[(i*3)+2].z+1)/2;
 	        if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
     	        u3 += 1.0;
 	        else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
