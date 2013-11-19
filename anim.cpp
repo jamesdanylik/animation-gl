@@ -42,9 +42,12 @@
 /* Global Variables - Courtesy of the template. */
 // Framsaver Variables
 FrameSaver FrSaver ;
-Timer TM ;
-float FPS;
+Timer TM ;  // the animation timer
+Timer PTM;  // the program timer
+float AV_FPS;
+float INST_FPS;
 float numFrames;
+float last_time;
 // Arcball Variables
 BallData *Arcball = NULL ;
 int Width = 800;
@@ -321,7 +324,6 @@ void resetArcball()
 // Key handler
 void myKey(unsigned char key, int x, int y)
 {
-    float time ;
     switch (key) {
         case 'q':
         case 27:
@@ -337,7 +339,6 @@ void myKey(unsigned char key, int x, int y)
         case 'a': // togle animation
             Animate = 1 - Animate ;
             // reset the timer to point to the current time		
-            time = TM.GetElapsedTime() ;
 			numFrames = 0.0;
             TM.Reset() ;
             // printf("Elapsed time %f\n", time) ;
@@ -467,7 +468,7 @@ void myinit(void)
 
     load_textures();
 	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -15.0f;
-	FPS = 0.0; numFrames = 0.0;  
+	AV_FPS = 0.0; numFrames = 0.0; last_time = 0.0; 
 
     Arcball = new BallData;
     Ball_Init(Arcball);
@@ -489,7 +490,10 @@ void set_colour(float r, float g, float b)
 void display(void)
 {
 	numFrames += 1.0;
-	FPS = numFrames/TIME;
+	AV_FPS = numFrames/TIME;
+	INST_FPS = 1.0/ (PTM.GetElapsedTime());
+	PTM.Reset();
+	
 
     // Clear the screen with the background colour (set in myinit)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -510,7 +514,7 @@ void display(void)
 	model_view *= Translate(Camera.x, Camera.y, Camera.z);
     
 
-    mat4 view = model_view;
+    //mat4 view = model_view;
     
     
     //model_view = Angel::LookAt(eye, ref, up);//just the view matrix;
@@ -650,7 +654,7 @@ void idleCB(void)
         eye.x = 20*sin(TIME);
         eye.z = 20*cos(TIME);
         
-        printf("\rTIME:  %.2fs  FPS:  %.2f  ", TIME, FPS) ;
+        printf("\rTIME:  %.2fs  AV.FPS:  %.2f  INST.FPS:  %.2f    ", TIME, AV_FPS, INST_FPS) ;
 		if (Recording)
 			printf("[REC]  ");
 		else
