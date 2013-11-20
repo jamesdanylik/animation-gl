@@ -561,7 +561,7 @@ void myinit(void)
     glEnable(GL_DEPTH_TEST);
 
     load_textures();
-	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = 30.0f;
+	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
 	AV_FPS = 0.0; numFrames = 0.0; last_time = 0.0; 
 
     Arcball = new BallData;
@@ -665,7 +665,8 @@ void display(void)
 	drawPyramid(gl_textures[6]);
 
 	model_view = mvstack.pop();
-	model_view *= Translate(0.0f, 0.0f, 5.0f);
+	model_view *= Translate(0.0f, 0.0f, 19.0f - TIME*TIME);
+	model_view *= Scale(4.0,2.0,1.0);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUniform1i( uEnableSkybox, 1);
