@@ -77,7 +77,7 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 7;
+const int max_textures = 8;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -86,7 +86,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"moon.tga",				//3
 			"moon_bump.tga",		//4
 			"colorwedge.tga",		//5
-			"colorpyramid.tga"		//6
+			"colorpyramid.tga",		//6
+			"starfield_skybox.tga"  //7
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -553,13 +554,16 @@ void display(void)
 
     // Previously glScalef(Zoom, Zoom, Zoom);
     model_view *= Scale(Zoom);
+	mvstack.push(model_view);
 
+	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
 	model_view *= Scale(100.0f);
 	glUniform1i( uEnableSkybox, 1);
-	drawICube(gl_textures[2]);
+	drawICube(gl_textures[7]);
 	glUniform1i( uEnableSkybox, 0);
 	model_view *= Scale(1/100.0);
 
+	model_view = mvstack.pop();
     // Draw Something
     set_colour(0.8f, 0.8f, 0.8f);
     drawSphere(gl_textures[2]);
@@ -591,6 +595,8 @@ void display(void)
 	drawWedge(gl_textures[5]);
 
 	model_view *= Translate(-3.0f, 0.0f, 0.0f);
+	model_view *= Scale(1.5f, 3.0f, 0.5f);
+	model_view *= RotateY(45.0);	
 	drawPyramid(gl_textures[6]);
 
     glutSwapBuffers();

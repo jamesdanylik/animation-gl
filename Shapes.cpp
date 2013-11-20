@@ -661,15 +661,46 @@ void generateCylinder(GLuint program, ShapeData* cylData)
                     (float*)cylUV, sizeof(cylUV));
 }
 
+// STAR DESTROYER ///////////////////////////////////////////////////
+// The mama set piece polygon; the imperial star destroyer.
+// Supports 4 texture areas; 
+//   0. standard ship metal
+//   1. command deck faces
+//   2. cargo bay area
+//   3. back face
+
+/*
+const int numSDVertices = 42; //(14 traingles) * (3points/traingle)
+
+const double sDWidth = 10.15f;
+const double sDLength = 16.0f;
+const double sDThickness = 1.0f; 
+const double sDCBSize = 3.0f;
+
+point4 sDVertices[9] = {
+	point4( sDLength/2, sDThickness/2, 0.0f), //top prow point
+	point4( sDLength/2,-sDThickness/2, 0.0f), //bottom prow point
+	point4(-sDLength/2, sDThickness/2, sDWidth/2), // right back corner top
+	point4(-sDLength/2,-sDThickness/2, sDWidth/2), // right back corner bottom
+	point4(-sDLength/2, sDThickness/2, -sDWidth/2),//left back corner top
+	point4(-sDLength/2,-sDThickness/2, -sDWidth/2),//left back corner bottom
+	point4(-sDLength/2, (sDThickness/2)*5, 0.0f), // back top point
+	point4(-sDLength/2, (sDThickness/2)*5, 0.0f), // back bottom point
+	point4(-sDLength/2, 0.0f, 0.0f) // back center
+	point4(-sDCBSize, (-(sDThickness/2*5)/sDLength)*(-sDCBSize-sDLength/2), 0.0f) // back cargo bay ridge
+	point4(0.0f, 
+};
 
 
+void sDTriangle( int a, int b, int c, point3 &normal, int face )
+{
+
+}
+
+void sDQuad( int a, int b, int c, int d, point3 &normal, int face )
+{
+
+}
 
 
-
-
-
-
-
-
-
-
+*/
