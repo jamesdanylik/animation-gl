@@ -514,13 +514,18 @@ void generateCone(GLuint program, ShapeData* coneData)
     for ( int i = 0; i < numConeVertices/3; i++)
     {
             u1 = 0.5*(atan2(conePoints[i*3].x, conePoints[i*3].y)/(M_PI) + 1);
-            u2 = u1;
             u3 = 0.5*(atan2(conePoints[(i*3)+2].x, conePoints[(i*3)+2].y)/(M_PI) + 1);
+			u2 = (u3 + u1)/2;
             if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
                 u3 += 1.0;
             else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
                 u3 -= 1.0;
 
+            u2 = (u3 + u1)/2;
+            if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
+                u2 += 1.0;
+            else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
+                u2 -= 1.0;
 
             v1 = 1.0f;
             v2 = 0.0f;
