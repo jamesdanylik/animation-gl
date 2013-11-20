@@ -77,7 +77,7 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 8;
+const int max_textures = 9;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -87,7 +87,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"moon_bump.tga",		//4
 			"colorwedge.tga",		//5
 			"colorpyramid.tga",		//6
-			"starfield_skybox.tga"  //7
+			"starfield_skybox.tga",  //7
+			"starfield_skysphere.tga" //8
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -102,6 +103,7 @@ ShapeData mCubeData;
 ShapeData wedgeData;
 ShapeData pyramidData;
 ShapeData iCubeData;
+ShapeData iSphereData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -342,6 +344,35 @@ void drawSphere( GLuint diffuse, GLuint bump)
     glUniform1i( uEnableBumpTex, 0);
 }
 
+// ISPHERE DRAW METHODS //////////////////////////////////////////////
+// This function draws a sphere with radius 1
+// centered around the origin.
+void drawISphere(void)
+{
+    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
+    glBindVertexArray( iSphereData.vao );
+    glDrawArrays( GL_TRIANGLES, 0, iSphereData.numVertices );
+}
+
+void drawISphere(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawISphere();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawISphere( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawISphere(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
+
 
 // Resets the mouse to starting posisition?
 void resetArcball()
@@ -470,6 +501,7 @@ void myinit(void)
 	generateWedge(program, &wedgeData);
 	generatePyramid(program, &pyramidData);
 	generateICube(program, &iCubeData);
+	generateISphere(program, &iSphereData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -497,7 +529,7 @@ void myinit(void)
     glEnable(GL_DEPTH_TEST);
 
     load_textures();
-	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -30.0f;
+	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = 30.0f;
 	AV_FPS = 0.0; numFrames = 0.0; last_time = 0.0; 
 
     Arcball = new BallData;
@@ -557,11 +589,11 @@ void display(void)
 	mvstack.push(model_view);
 
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
-	model_view *= Scale(100.0f);
+	model_view *= Scale(200.0f);
 	glUniform1i( uEnableSkybox, 1);
-	drawICube(gl_textures[7]);
+	drawISphere(gl_textures[8]);
 	glUniform1i( uEnableSkybox, 0);
-	model_view *= Scale(1/100.0);
+	model_view *= Scale(1/200.0);
 
 	model_view = mvstack.pop();
     // Draw Something

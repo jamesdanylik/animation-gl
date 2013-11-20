@@ -462,6 +462,31 @@ void generateSphere(GLuint program, ShapeData* sphereData)
         (float*)sphereUVs, sizeof(sphereUVs));
 }
 
+// ISphere //////////////////////////////////////////////////////////
+
+point3 iSphereNormals[numSphereVertices];
+
+void generateISphere(GLuint program, ShapeData* iSphereData)
+{
+    iSphereData->numVertices = numSphereVertices;
+
+    // Normals
+    for (int i = 0; i < numSphereVertices; i++)
+    {
+        iSphereNormals[i] = point3(-spherePoints[i].x, -spherePoints[i].y, -spherePoints[i].z);
+    }
+    
+    // Create a vertex array object
+    glGenVertexArrays( 1, &iSphereData->vao );
+    glBindVertexArray( iSphereData->vao );
+
+    // Set vertex attributes
+    setVertexAttrib(program,
+        (float*)spherePoints,  sizeof(spherePoints),
+        (float*)iSphereNormals, sizeof(iSphereNormals),
+        (float*)sphereUVs, sizeof(sphereUVs));
+}
+
 //----------------------------------------------------------------------------
 // Cone
 
@@ -515,17 +540,20 @@ void generateCone(GLuint program, ShapeData* coneData)
     {
             u1 = 0.5*(atan2(conePoints[i*3].x, conePoints[i*3].y)/(M_PI) + 1);
             u3 = 0.5*(atan2(conePoints[(i*3)+2].x, conePoints[(i*3)+2].y)/(M_PI) + 1);
-			u2 = (u3 + u1)/2;
-            if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2)
-                u3 += 1.0;
-            else if (u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
-                u3 -= 1.0;
+			//u2 = (u3 + u1)/2;
+			u2 = u1;
+            if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2 )
+                  u3 += 1.0;
+            if ( u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
+                  u3 -= 1.0;
+
 
             u2 = (u3 + u1)/2;
             if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
                 u2 += 1.0;
             else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
                 u2 -= 1.0;
+
 
             v1 = 1.0f;
             v2 = 0.0f;
@@ -595,7 +623,8 @@ void generateCylinder(GLuint program, ShapeData* cylData)
 		{
 			u1 = 0.5*(atan2(cylPoints[i*3].x, cylPoints[i*3].y)/(M_PI) + 1);
             u3 = 0.5*(atan2(cylPoints[(i*3)+2].x, cylPoints[(i*3)+2].y)/(M_PI) + 1);
-			u2 = (u3 + u1)/2;
+			//u2 = (u3 + u1)/2;
+			u2 = u1;
             if ( u3 < 0.75 && u2 > 0.75 && u2-u3 > .2 )
                   u3 += 1.0;
             if ( u3 > 0.75 && u2 < 0.75 && u3-u2 > .2)
@@ -604,9 +633,9 @@ void generateCylinder(GLuint program, ShapeData* cylData)
 
 			u2 = (u3 + u1)/2;
             if ( u2 < 0.75 && u1 > 0.75 && u1-u2 > .2 )
-                u2 += 1.0;
-            else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
                 u2 -= 1.0;
+            else if ( u2 > 0.75 && u1 < 0.75 && u2-u1 > .2)
+                u2 += 1.0;
 
             
 

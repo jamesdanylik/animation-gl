@@ -17,7 +17,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean: 
-	rm -rf $(OBJECTS) $(EXECUTABLE) $(ARCHIVE).zip
+	rm -rf $(OBJECTS) $(EXECUTABLE) $(ARCHIVE).zip *.ppm
 
 run: $(EXECUTABLE)
 	./$(EXECUTABLE) $(ARGS)
