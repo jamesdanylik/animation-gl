@@ -21,5 +21,6 @@ void generateWedge(GLuint program, ShapeData* wedgeData);
 void generatePyramid(GLuint program, ShapeData* pyramidData);
 void generateICube(GLuint program, ShapeData* iCubeData);
 void generateISphere(GLuint program, ShapeData* iSphereData);
+void generateDecal(GLuint program, ShapeData* decalData);
 
 #endif

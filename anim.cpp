@@ -77,7 +77,7 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 9;
+const int max_textures = 10;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -88,7 +88,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"colorwedge.tga",		//5
 			"colorpyramid.tga",		//6
 			"starfield_skybox.tga",  //7
-			"starfield_skysphere.tga" //8
+			"starfield_skysphere.tga", //8
+			"transparency_test.tga" //9
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -104,6 +105,7 @@ ShapeData wedgeData;
 ShapeData pyramidData;
 ShapeData iCubeData;
 ShapeData iSphereData;
+ShapeData decalData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -127,6 +129,35 @@ Cam Camera;
 double TIME = 0.0 ;
 
 /* Function Implmentations */
+
+// DECAL DRAW METHODS ///////////////////////////////////////////////
+// Render a pure quad facing +z to display decals/text and the like.
+
+void drawDecal(void)
+{
+    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
+    glBindVertexArray( decalData.vao );
+    glDrawArrays( GL_TRIANGLES, 0, decalData.numVertices );
+}
+
+void drawDecal(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawDecal();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawDecal(GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawDecal(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
 
 // Render a solid cylinder  oriented along the Z axis. Both bases are of radius 1. 
 // The bases of the cylinder are placed at Z = 0, and at Z = 1
@@ -502,6 +533,7 @@ void myinit(void)
 	generatePyramid(program, &pyramidData);
 	generateICube(program, &iCubeData);
 	generateISphere(program, &iSphereData);
+	generateDecal(program, &decalData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -587,6 +619,7 @@ void display(void)
     // Previously glScalef(Zoom, Zoom, Zoom);
     model_view *= Scale(Zoom);
 	mvstack.push(model_view);
+	mvstack.push(model_view);
 
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
 	model_view *= Scale(200.0f);
@@ -631,6 +664,15 @@ void display(void)
 	model_view *= RotateY(45.0);	
 	drawPyramid(gl_textures[6]);
 
+	model_view = mvstack.pop();
+	model_view *= Translate(0.0f, 0.0f, 5.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glUniform1i( uEnableSkybox, 1);
+	drawDecal(gl_textures[9]);
+    glUniform1i( uEnableSkybox, 0);
+	glDisable(GL_BLEND);
+	
     glutSwapBuffers();
     if(Recording == 1)
         FrSaver.DumpPPM(Width, Height) ;

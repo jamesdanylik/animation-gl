@@ -19,8 +19,8 @@ void main()
 { 
 	if (EnableSkybox == 1)
 	{
-		gl_FragColor = texture2D(Tex, vec2(gl_TexCoord[0]));
-		gl_FragColor.a = 1.0;
+		vec4 alpha = texture2D(Tex, vec2(gl_TexCoord[0])).aaaa;
+		gl_FragColor = alpha*texture2D(Tex, vec2(gl_TexCoord[0]));
 	}
 	else
 	{

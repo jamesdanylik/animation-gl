@@ -43,6 +43,50 @@ void setVertexAttrib(GLuint program,
 }
 
 
+const int numDecalVertices = 6; //(1face)(2triangles)(3 vertices/traingles)
+
+point4 decalPoints[numDecalVertices];
+point3 decalNormals[numDecalVertices];
+point2 decalUV[numDecalVertices];
+
+point4 dVertices[4] = { 
+	point4( -0.5, -0.5, 0.0, 1.0),
+	point4( -0.5, 0.5, 0.0, 1.0),
+	point4( 0.5, 0.5, 0.0, 1.0),
+	point4( 0.5,-0.5, 0.0, 1.0)
+};
+
+int dIndex = 0;
+void generateDecal(GLuint program, ShapeData *decalData)
+{
+	point3 normal = point3(0.0f, 0.0f, 1.0f);
+	decalPoints[dIndex] = dVertices[0]; decalNormals[dIndex] = normal;
+	decalUV[dIndex] = point2(0.0f, 1.0f); dIndex++;
+    decalPoints[dIndex] = dVertices[1]; decalNormals[dIndex] = normal;
+    decalUV[dIndex] = point2(0.0f, 0.0f); dIndex++;
+    decalPoints[dIndex] = dVertices[2]; decalNormals[dIndex] = normal;
+    decalUV[dIndex] = point2(1.0f, 0.0f); dIndex++;
+    decalPoints[dIndex] = dVertices[0]; decalNormals[dIndex] = normal;
+    decalUV[dIndex] = point2(0.0f, 1.0f); dIndex++;
+    decalPoints[dIndex] = dVertices[2]; decalNormals[dIndex] = normal;
+    decalUV[dIndex] = point2(1.0f, 0.0f); dIndex++;
+    decalPoints[dIndex] = dVertices[3]; decalNormals[dIndex] = normal;
+    decalUV[dIndex] = point2(1.0f, 1.0f); dIndex++;
+
+    decalData->numVertices = numDecalVertices;
+
+    // Create a vertex array object
+    glGenVertexArrays( 1, &decalData->vao );
+    glBindVertexArray( decalData->vao );
+
+    // Set vertex attributes
+    setVertexAttrib(program,
+        (float*)decalPoints,  sizeof(decalPoints),
+        (float*)decalNormals, sizeof(decalNormals),
+        (float*)decalUV,      sizeof(decalUV));
+
+}
+
 //----------------------------------------------------------------------------
 // Cube (Uniform)
 
