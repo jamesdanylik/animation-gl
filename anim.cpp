@@ -34,6 +34,7 @@
 #include "Ball.h"
 #include "FrameSaver.h"
 #include "Timer.h"
+#include "Timings.h"
 #include "Shapes.h"
 #include "Tga.h"
 #include "Angel/Angel.h"
@@ -73,10 +74,6 @@ typedef char STR[STRLEN];
 #define Y 1
 #define Z 2
 //texture
-GLuint texture_cube;
-GLuint texture_earth;
-GLuint texture_bump;
-
 const int max_textures = 11;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
@@ -442,9 +439,9 @@ void myKey(unsigned char key, int x, int y)
             break ;
         case '0':
             //reset your object
-			OFFSET = 0.0f;
+			OFFSET = 25.0f;
 			numFrames = 0.0f;
-			TIME = 0.0f;
+			TIME = 25.0f;
 			TM.Reset();
             glutPostRedisplay() ;
             break ;
@@ -550,7 +547,7 @@ void myinit(void)
     uProjection = glGetUniformLocation( program, "Projection" );
     uView       = glGetUniformLocation( program, "View"       );
 
-    glClearColor( 0.1, 0.1, 0.2, 1.0 ); // dark blue background
+    glClearColor( 0.0, 0.0, 0.0, 1.0 ); // dark blue background
 
     uAmbient   = glGetUniformLocation( program, "AmbientProduct"  );
     uDiffuse   = glGetUniformLocation( program, "DiffuseProduct"  );
@@ -592,6 +589,51 @@ void set_colour(float r, float g, float b)
     glUniform4f(uSpecular, specular*r, specular*g, specular*b, 1.0f);
 }
 
+void place_camera()
+{
+    model_view *= RotateX(Camera.Rx);
+    model_view *= RotateY(Camera.Ry);
+    model_view *= RotateZ(Camera.Rz);
+    model_view *= Translate(Camera.x, Camera.y, Camera.z);
+	glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
+}
+
+void draw_stars()
+{
+	mvstack.push(model_view);
+	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
+    model_view *= Scale(1000.0f);
+    glUniform1i( uEnableSkybox, 1);
+    drawISphere(gl_textures[8]);
+    glUniform1i( uEnableSkybox, 0);
+    model_view *= Scale(1/200.0);
+	model_view = mvstack.pop();
+}
+
+void draw_title_crawl()
+{
+	mvstack.push(model_view);
+	model_view *= Translate(0.0, -9.0f, 0.0f);
+    model_view *= RotateX(-25.0);
+    model_view *= Translate(0.0f, 0.0, 18.8f - (TIME-SCENE_3_START)*(TIME-SCENE_3_START));
+    model_view *= Scale(6.0,3.0,1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glUniform1i( uEnableSkybox, 1);
+    drawDecal(gl_textures[9]);
+    model_view = mvstack.pop();
+
+	mvstack.push(model_view);
+    model_view *= Translate(0.0f, -10.0f, 50.0f - 2.0*(TIME-SCENE_3_START));
+    model_view *= Scale(20.0, 1.0, 60.0);
+    model_view *= RotateX(-90.0);
+    drawDecal(gl_textures[10]);
+
+    glUniform1i( uEnableSkybox, 0);
+    glDisable(GL_BLEND);
+	model_view = mvstack.pop();
+}
+
 // Display Function (Primary Changes)
 void display(void)
 {
@@ -608,50 +650,44 @@ void display(void)
 
     model_view = mat4(1.0f);
     
-	if ( 0.00 <= TIME && TIME < 8.00) //titlecard 1
+	if ( SCENE_0_START <= TIME && TIME < SCENE_0_END ) //titlecard 1
+	{
+        Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+        Camera.Rx = 0.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+		place_camera();
+	}
+	else if ( SCENE_1_START <= TIME && TIME < SCENE_1_END ) //titlecard 2
 	{
 
 	}
-	else if ( 8.00 <= TIME && TIME < 16.00 ) //titlecard 2
+	else if (SCENE_2_START <= TIME && TIME < SCENE_2_END ) // along time ago
 	{
 
 	}
-	else if (16.00 <= TIME && TIME < 25.00 ) // along time ago
+	else if ( SCENE_3_START <= TIME && TIME < SCENE_3_END ) // title crawl & opening ships
 	{
-
+    	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+    	Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+        place_camera();
+        draw_stars();
+		if ( TIME < 115.00)
+        	draw_title_crawl();
 	}
-	else if ( 25.00 <= TIME && TIME < 150.00 ) // title crawl & opening ships
-	{
-
-	}
-	else if ( 150.00 <= TIME && TIME < 153.00 ) // forward engines hit
+	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END ) // forward engines hit
     {
 	}
-    model_view *= RotateX(Camera.Rx);
-	model_view *= Translate(Camera.x, Camera.y, Camera.z);
-    
-
+    //place_camera(); 
+	//draw_stars();
     //mat4 view = model_view;
     
     
     //model_view = Angel::LookAt(eye, ref, up);//just the view matrix;
-
-    glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
-
+/*
     // Previously glScalef(Zoom, Zoom, Zoom);
     //model_view *= Scale(Zoom);
 	mvstack.push(model_view);
 	mvstack.push(model_view);
-    mvstack.push(model_view);
 
-	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
-	model_view *= Scale(1000.0f);
-	glUniform1i( uEnableSkybox, 1);
-	drawISphere(gl_textures[8]);
-	glUniform1i( uEnableSkybox, 0);
-	model_view *= Scale(1/200.0);
-
-	model_view = mvstack.pop();
     // Draw Something
     set_colour(0.8f, 0.8f, 0.8f);
     drawSphere(gl_textures[2]);
@@ -705,7 +741,7 @@ void display(void)
 
     glUniform1i( uEnableSkybox, 0);
 	glDisable(GL_BLEND);
-	
+*/	
     glutSwapBuffers();
     if(Recording == 1)
         FrSaver.DumpPPM(Width, Height) ;
