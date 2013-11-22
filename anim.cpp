@@ -123,10 +123,12 @@ struct Cam
 	double x;
 	double y;
 	double z;
+	double Rx;
+	double Ry;
+	double Rz;
 };
-
 Cam Camera;
-// Time variable
+// Time variables
 double TIME = 0.0 ;
 double OFFSET = 0.0;
 
@@ -571,6 +573,7 @@ void myinit(void)
 
     load_textures();
 	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+	Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
 	AV_FPS = 0.0; numFrames = 0.0; last_time = 0.0; 
 
     Arcball = new BallData;
@@ -624,7 +627,7 @@ void display(void)
 	else if ( 150.00 <= TIME && TIME < 153.00 ) // forward engines hit
     {
 	}
-    model_view *= RotateX(25.0);
+    model_view *= RotateX(Camera.Rx);
 	model_view *= Translate(Camera.x, Camera.y, Camera.z);
     
 
