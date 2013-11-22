@@ -94,7 +94,7 @@ typedef char STR[STRLEN];
 #define Y 1
 #define Z 2
 //texture
-const int max_textures = 11;
+const int max_textures = 13;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -102,12 +102,14 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"colorcube.tga",		//2
 			"moon.tga",				//3
 			"moon_bump.tga",		//4
-			"colorwedge.tga",		//5
-			"colorpyramid.tga",		//6
+			"mars.tga",				//5
+			"mars_bump.tga",		//6
 			"starfield_skybox.tga",  //7
 			"starfield_skysphere.tga", //8
 			"transparency_test.tga", //9
-			"titlecrawl.tga" //10
+			"titlecrawl.tga", 		//10
+			"alongtimeago.tga", 	//11
+			"earth.tga", 			//12
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -449,9 +451,9 @@ double sinBetween(double startTime, double endTime,
 {
 	double locDiff = endLoc - startLoc;
 	double scaleFactor = (TIME-startTime)/(endTime-startTime);
-	double scale = sin((scaleFactor)*(M_PI/2.0));
+	double scale = sin((scaleFactor)*(M_PI)-(M_PI/2));
 	
-	return startLoc + locDiff * scale;
+	return startLoc + locDiff * (scale+1)/2;
 	
 
 }
@@ -479,7 +481,8 @@ void myKey(unsigned char key, int x, int y)
 			if (Animate)
 			{
 				#ifndef __NOAUDIO__
-				kill(audioPID, SIGKILL);
+				if( audioRunning )
+					kill(audioPID, SIGKILL);
 				audioRunning = 0;
 				#endif
 				OFFSET += TM.GetElapsedTime();
@@ -540,7 +543,8 @@ void myKey(unsigned char key, int x, int y)
             if ( audioRunning )
                 kill(audioPID, SIGKILL);
 			#endif
-            jumpTime(SCENE_3_START);
+			jumpTime(117.0);
+            //jumpTime(SCENE_3_START);
             TM.Reset();
             glutPostRedisplay() ;
             break ;
@@ -679,7 +683,7 @@ void myinit(void)
     glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
     glUniform4f(uSpecular,   0.2f,  0.2f,  0.2f, 1.0f);
-    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
+    glUniform4f(uLightPos,  100.0f, 80.0f, 0.0f, 0.0f);
     glUniform1f(uShininess, 100.0f);
 	glUniform1f(uFade, 1.0f);
 
@@ -719,6 +723,8 @@ void draw_stars()
 {
 	mvstack.push(model_view);
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
+	model_view *= RotateX(90.0);
+	model_view *= RotateY(90.0);
     model_view *= Scale(1000.0f);
     glUniform1i( uEnableSkybox, 1);
     drawISphere(gl_textures[8]);
@@ -729,6 +735,21 @@ void draw_stars()
 
 void draw_title_crawl()
 {
+	double titleFade = 1.0f;
+	glUniform1f(uFade, (float)titleFade);
+	double titleWait = 10.0f;
+	double titleTime = 5.0f;
+	if (TIME > SCENE_3_START + titleWait && TIME < SCENE_3_START + titleWait + titleTime)
+	{
+		titleFade = sinBetween(SCENE_3_START + titleWait, SCENE_3_START + titleWait + titleTime,
+							   1.0, 0, TIME);
+		glUniform1f(uFade, (float)titleFade);
+	}
+	else if (TIME > SCENE_3_START + titleWait + titleTime)
+	{
+		titleFade = 0.0f;
+		glUniform1f(uFade, (float)titleFade);
+	}
 	mvstack.push(model_view);
 	model_view *= Translate(0.0, -9.0f, 0.0f);
     model_view *= RotateX(-25.0);
@@ -737,9 +758,26 @@ void draw_title_crawl()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUniform1i( uEnableSkybox, 1);
+	glUniform1i(uEnableFade, 1);
     drawDecal(gl_textures[9]);
     model_view = mvstack.pop();
 
+
+    double bookFade = 1.0f;
+    glUniform1f(uFade, (float)bookFade);
+    double bookWait = 75.0f;
+    double bookTime = 5.0f;
+    if (TIME > SCENE_3_START + bookWait && TIME < SCENE_3_START + bookWait + bookTime)
+    {
+        bookFade = sinBetween(SCENE_3_START + bookWait, SCENE_3_START + bookWait + bookTime,
+                               1.0, 0, TIME);
+        glUniform1f(uFade, (float)bookFade);
+    }
+    else if (TIME > SCENE_3_START + bookWait + bookTime)
+    {
+        bookFade = 0.0f;
+        glUniform1f(uFade, (float)bookFade);
+    }
 	mvstack.push(model_view);
     model_view *= Translate(0.0f, -10.0f, 50.0f - 1.2*(TIME-SCENE_3_START));
     model_view *= Scale(20.0, 1.0, 60.0);
@@ -748,6 +786,30 @@ void draw_title_crawl()
 
     glUniform1i( uEnableSkybox, 0);
     glDisable(GL_BLEND);
+	model_view = mvstack.pop();
+}
+
+double earth_rotation = 0.0f;
+void draw_planets()
+{
+	mvstack.push(model_view);
+	model_view *= Translate(0.0, -100.0, -20.0);
+	model_view *= Scale(2.0);
+	drawSphere(gl_textures[3], gl_textures[4]);
+	model_view = mvstack.pop();
+
+	mvstack.push(model_view);
+	model_view *= Translate(-20.0, -70.0, 5.0);
+	model_view *= RotateY(1.7*TIME);
+	model_view *= Scale(6.0);
+	drawSphere(gl_textures[12]);
+	model_view = mvstack.pop();
+
+	mvstack.push(model_view);
+	model_view *= Translate(0.0f, -80.0f, 550.0f);
+	model_view *= Scale(500.0);
+	drawSphere(gl_textures[5]);
+	
 	model_view = mvstack.pop();
 }
 
@@ -782,34 +844,62 @@ void display(void)
 	{
 		model_view *= Angel::LookAt( eye, ref, up );
 		glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
-	    //glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
 		drawMCube(gl_textures[2]);
 	}
 	else if (SCENE_2_START <= TIME && TIME < SCENE_2_END ) // along time ago
 	{
 		default_camera();
 		place_camera();
+		double fade;
+		double eighth = (SCENE_2_END-SCENE_2_START)/8;
+		if (TIME < SCENE_2_START+eighth)
+		{
+			fade = 0.0f;
+			glUniform1f(uFade, (float)fade);
+		}
+		if (SCENE_2_START+eighth < TIME && TIME < SCENE_2_START + 3*eighth)
+		{
+			fade = sinBetween(SCENE_2_START+eighth, SCENE_2_START+3*eighth, 0.0, 1.0, TIME);
+			glUniform1f(uFade, (float)fade);
+		}
+		else if (TIME > SCENE_2_END - 3*eighth && TIME < SCENE_2_END-eighth )
+		{
+			fade = sinBetween(SCENE_2_END-3*eighth, SCENE_2_END-eighth, 1.0, 0.0, TIME);
+			glUniform1f(uFade, (float)fade);
+		}
 
-		double fade = sinBetween(SCENE_2_START, SCENE_2_END, 1.0, 0.0, TIME);
-		glUniform1f(uFade, (float)fade);
+		//double fade = sinBetween(SCENE_2_START, SCENE_2_END, 1.0, 0.0, TIME);
 		glUniform1i(uEnableFade, 1);
 	    glUniform1i( uEnableSkybox, 1);
     	glEnable(GL_BLEND);
     	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		model_view *= Scale(15.0, 15.0, 1.0);
-		drawDecal(gl_textures[5]);
+		model_view *= Scale(10.0, 2.0, 1.0);
+		drawDecal(gl_textures[11]);
 		glUniform1i(uEnableFade, 0);
 		glUniform1i( uEnableSkybox, 0);
 
 	}
 	else if ( SCENE_3_START <= TIME && TIME < SCENE_3_END ) // title crawl & opening ships
 	{
-    	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
-    	Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f; 
-        place_camera();
-        draw_stars();
-		if ( TIME < 115.00)
+		double panTime = 117.00;
+		if ( TIME < panTime)
+		{
+			Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+	        Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+	        place_camera();
+    	    draw_stars();
         	draw_title_crawl();
+		}
+		else if ( TIME < SCENE_3_END)
+		{
+			if ( TIME < 130.0 )
+			{
+				Camera.Rx = sinBetween(panTime, 130.00, 25.0, 90.0, TIME);
+			}
+			place_camera();
+			draw_stars();
+			draw_planets();
+		}
 	}
 	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END ) // forward engines hit
     {
