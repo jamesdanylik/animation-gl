@@ -128,6 +128,7 @@ struct Cam
 Cam Camera;
 // Time variable
 double TIME = 0.0 ;
+double OFFSET = 0.0;
 
 /* Function Implmentations */
 
@@ -429,6 +430,8 @@ void myKey(unsigned char key, int x, int y)
             glutPostRedisplay() ;
             break ;
         case 'a': // togle animation
+			if (Animate)
+				OFFSET += TM.GetElapsedTime();
             Animate = 1 - Animate ;
             // reset the timer to point to the current time		
 			numFrames = 0.0;
@@ -588,25 +591,31 @@ void display(void)
 	AV_FPS = numFrames/TIME;
 	INST_FPS = 1.0/ (PTM.GetElapsedTime());
 	PTM.Reset();
-	
-	//Camera.z = 5*sin(TIME)-20.0f;
-
+	printf("\rTIME:  %.2fs  AV.FPS:  %.2f  INST.FPS:  %.2f    ", TIME, AV_FPS, INST_FPS) ;	
     // Clear the screen with the background colour (set in myinit)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     model_view = mat4(1.0f);
     
-    
-    //model_view *= Translate(Camera.x, Camera.y, Camera.z);
-    HMatrix r;
-    Ball_Value(Arcball,r);
+	if ( 0.00 <= TIME && TIME < 8.00) //titlecard 1
+	{
 
-    mat4 mat_arcball_rot(
-        r[0][0], r[0][1], r[0][2], r[0][3],
-        r[1][0], r[1][1], r[1][2], r[1][3],
-        r[2][0], r[2][1], r[2][2], r[2][3],
-        r[3][0], r[3][1], r[3][2], r[3][3]);
-    //model_view *= mat_arcball_rot;
+	}
+	else if ( 8.00 <= TIME && TIME < 16.00 ) //titlecard 2
+	{
+
+	}
+	else if (16.00 <= TIME && TIME < 25.00 ) // along time ago
+	{
+
+	}
+	else if ( 25.00 <= TIME && TIME < 150.00 ) // title crawl & opening ships
+	{
+
+	}
+	else if ( 150.00 <= TIME && TIME < 153.00 ) // forward engines hit
+    {
+	}
     model_view *= RotateX(25.0);
 	model_view *= Translate(Camera.x, Camera.y, Camera.z);
     
@@ -619,13 +628,13 @@ void display(void)
     glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
 
     // Previously glScalef(Zoom, Zoom, Zoom);
-    model_view *= Scale(Zoom);
+    //model_view *= Scale(Zoom);
 	mvstack.push(model_view);
 	mvstack.push(model_view);
     mvstack.push(model_view);
 
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
-	model_view *= Scale(200.0f);
+	model_view *= Scale(1000.0f);
 	glUniform1i( uEnableSkybox, 1);
 	drawISphere(gl_textures[8]);
 	glUniform1i( uEnableSkybox, 0);
@@ -776,14 +785,14 @@ void idleCB(void)
         //TM.Reset() ; // commenting out this will make the time run from 0
         // leaving 'Time' counts the time interval between successive calls to idleCB
         if( Recording == 0 )
-            TIME = TM.GetElapsedTime() ;
+            TIME = TM.GetElapsedTime() + OFFSET;
         else
-            TIME += 0.033 ; // save at 30 frames per second.        
+            TIME += 0.033 + OFFSET; // save at 30 frames per second.        
 
         eye.x = 20*sin(TIME);
         eye.z = 20*cos(TIME);
         
-        printf("\rTIME:  %.2fs  AV.FPS:  %.2f  INST.FPS:  %.2f    ", TIME, AV_FPS, INST_FPS) ;
+        
 		if (Recording)
 			printf("[REC]  ");
 		else
