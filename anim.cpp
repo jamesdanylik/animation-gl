@@ -440,6 +440,11 @@ void myKey(unsigned char key, int x, int y)
             break ;
         case '0':
             //reset your object
+			OFFSET = 0.0f;
+			numFrames = 0.0f;
+			TIME = 0.0f;
+			TM.Reset();
+            glutPostRedisplay() ;
             break ;
         case 'm':
             if( Recording == 1 )
@@ -588,8 +593,11 @@ void set_colour(float r, float g, float b)
 void display(void)
 {
 	numFrames += 1.0;
-	AV_FPS = numFrames/TIME;
 	INST_FPS = 1.0/ (PTM.GetElapsedTime());
+	if( Animate )
+		AV_FPS = numFrames/TIME;	
+	else
+		AV_FPS = INST_FPS;
 	PTM.Reset();
 	printf("\rTIME:  %.2fs  AV.FPS:  %.2f  INST.FPS:  %.2f    ", TIME, AV_FPS, INST_FPS) ;	
     // Clear the screen with the background colour (set in myinit)
@@ -800,6 +808,11 @@ void idleCB(void)
 		fflush(stdout);
         glutPostRedisplay() ; 
     }
+	else
+	{
+	    fflush(stdout);
+        glutPostRedisplay() ;
+	}
 }
 
 // Main Function, program starting point:
