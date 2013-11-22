@@ -2,7 +2,7 @@
 
 CC=g++
 CFLAGS=-c -std=c++11 -Wall -Wno-unused-function
-LDFLAGS=-lGLEW -lglut -lGL
+LDFLAGS=-lglut -lGLU -lGLEW -lGL
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=animation-gl

@@ -14,13 +14,18 @@ uniform int   EnableTex;
 uniform sampler2D BumpTex;
 uniform int   EnableBumpTex;
 uniform int	  EnableSkybox;
+uniform int	  EnableFade;
+uniform float Fade;
 
 void main() 
 { 
 	if (EnableSkybox == 1)
 	{
 		vec4 alpha = texture2D(Tex, vec2(gl_TexCoord[0])).aaaa;
-		gl_FragColor = alpha*texture2D(Tex, vec2(gl_TexCoord[0]));
+		if (EnableFade == 1)
+			gl_FragColor = alpha*vec4(1.0,1.0,1.0,Fade)*texture2D(Tex, vec2(gl_TexCoord[0]));
+		else
+			gl_FragColor = alpha*texture2D(Tex, vec2(gl_TexCoord[0]));
 	}
 	else
 	{

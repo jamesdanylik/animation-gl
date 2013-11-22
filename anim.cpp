@@ -10,6 +10,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "GL/freeglut.h"
+#define __NOAUDIO__ // define no audio in windows
 #elif __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
@@ -18,6 +19,7 @@
 #define glutInitContextProfile(a)
 #define glewExperimental int glewExperimentalAPPLE
 #define glewInit()
+#define __NOAUDIO__ // define no audio in mac
 #else
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -29,6 +31,24 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <algorithm>
+
+// Stuff for audio support!  Pretty nifty!  But
+// definitely only for LINUX systems! 
+// (More specifically, requires support for ALSA,
+// which should be present on all linux systems.
+//
+// Uncommenting the following line will build  
+// with sudio support removed in LINUX as well:
+//#define __NOAUDIO__
+#ifndef __NOAUDIO__
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+pid_t audioPID;
+#endif
 
 /* Application Includes */
 #include "Ball.h"
@@ -109,10 +129,11 @@ MatrixStack  mvstack;
 mat4         model_view;
 GLint        uModelView, uProjection, uView;
 GLint        uAmbient, uDiffuse, uSpecular, uLightPos, uShininess;
-GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex, uEnableSkybox;
+GLint        uTex, uEnableTex, uBumpTex, uEnableBumpTex, uEnableSkybox, uEnableFade;
+GLfloat		 uFade;
 // The eye point and look-at point.
 // Currently unused. Use to control a camera with LookAt().
-Angel::vec4 eye{0, 0.0, 50.0,1.0};
+Angel::vec4 eye{0, 0.0, -10.0,1.0};
 Angel::vec4 ref{0.0, 0.0, 0.0,1.0};
 Angel::vec4 up{0.0,1.0,0.0,0.0};
 struct Cam 
@@ -128,6 +149,8 @@ Cam Camera;
 // Time variables
 double TIME = 0.0 ;
 double OFFSET = 0.0;
+
+int audioRunning = 0;
 
 /* Function Implmentations */
 
@@ -413,6 +436,26 @@ void resetArcball()
     Ball_Place(Arcball,qOne,0.75);
 }
 
+void jumpTime(double time)
+{
+	OFFSET = time;
+	TIME = time;
+	numFrames = 0.0f;
+}
+
+double sinBetween(double startTime, double endTime,
+				  double startLoc, double endLoc, 
+                  double TIME )
+{
+	double locDiff = endLoc - startLoc;
+	double scaleFactor = (TIME-startTime)/(endTime-startTime);
+	double scale = sin((scaleFactor)*(M_PI/2.0));
+	
+	return startLoc + locDiff * scale;
+	
+
+}
+
 // Key handler
 void myKey(unsigned char key, int x, int y)
 {
@@ -420,6 +463,10 @@ void myKey(unsigned char key, int x, int y)
         case 'q':
         case 27:
 			printf("\n");
+			#ifndef __NOAUDIO__
+			if ( audioRunning )
+				kill(audioPID, SIGKILL);
+			#endif
             exit(0); 
         case 's':
             FrSaver.DumpPPM(Width,Height) ;
@@ -430,7 +477,30 @@ void myKey(unsigned char key, int x, int y)
             break ;
         case 'a': // togle animation
 			if (Animate)
+			{
+				#ifndef __NOAUDIO__
+				kill(audioPID, SIGKILL);
+				audioRunning = 0;
+				#endif
 				OFFSET += TM.GetElapsedTime();
+			}
+			else if (TIME == 0.0)
+			{
+                #ifndef __NOAUDIO__
+				audioPID = fork();
+				audioRunning = 1;
+				if( audioPID == 0) 
+				{
+					int fd = open("/dev/null", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+					dup2(fd,1);
+					dup2(fd,2);
+					close(fd);
+					audioRunning = 1;
+					execl("/usr/bin/aplay", "aplay", "first5mins.wav", (char*) 0);
+					_exit(0);
+				}
+				#endif
+			}
             Animate = 1 - Animate ;
             // reset the timer to point to the current time		
 			numFrames = 0.0;
@@ -439,10 +509,48 @@ void myKey(unsigned char key, int x, int y)
             break ;
         case '0':
             //reset your object
-			OFFSET = 25.0f;
-			numFrames = 0.0f;
-			TIME = 25.0f;
+            #ifndef __NOAUDIO__
+			if ( audioRunning )
+                kill(audioPID, SIGKILL);
+			#endif
+			jumpTime(SCENE_0_START);
 			TM.Reset();
+            glutPostRedisplay() ;
+            break ;
+		case '1':
+			#ifndef __NOAUDIO__
+            if ( audioRunning )
+                kill(audioPID, SIGKILL);
+			#endif
+            jumpTime(SCENE_1_START);
+            TM.Reset();
+            glutPostRedisplay() ;
+            break ;
+		case '2':
+			#ifndef __NOAUDIO__
+         	if ( audioRunning )
+                kill(audioPID, SIGKILL);
+			#endif
+            jumpTime(SCENE_2_START);
+            TM.Reset();
+            glutPostRedisplay() ;
+            break ;
+		case '3':
+			#ifndef __NOAUDIO__
+            if ( audioRunning )
+                kill(audioPID, SIGKILL);
+			#endif
+            jumpTime(SCENE_3_START);
+            TM.Reset();
+            glutPostRedisplay() ;
+            break ;
+		case '4':
+			#ifndef __NOAUDIO__
+            if ( audioRunning )
+                kill(audioPID, SIGKILL);
+			#endif
+            jumpTime(SCENE_4_START);
+            TM.Reset();
             glutPostRedisplay() ;
             break ;
         case 'm':
@@ -524,6 +632,12 @@ void load_textures(void)
 	glUniform1i( uBumpTex, 1);
 }
 
+void default_camera()
+{
+    Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+    Camera.Rx = 0.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+}
+
 // Initialization Function
 void myinit(void)
 {
@@ -559,12 +673,15 @@ void myinit(void)
 	uBumpTex   = glGetUniformLocation( program, "BumpTex"		  );
 	uEnableBumpTex = glGetUniformLocation( program, "EnableBumpTex");
 	uEnableSkybox = glGetUniformLocation( program, "EnableSkybox");
+	uEnableFade= glGetUniformLocation( program, "EnableFade"	);
+	uFade	   = glGetUniformLocation( program, "Fade"			);
 
     glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
     glUniform4f(uSpecular,   0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
     glUniform1f(uShininess, 100.0f);
+	glUniform1f(uFade, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -624,7 +741,7 @@ void draw_title_crawl()
     model_view = mvstack.pop();
 
 	mvstack.push(model_view);
-    model_view *= Translate(0.0f, -10.0f, 50.0f - 2.0*(TIME-SCENE_3_START));
+    model_view *= Translate(0.0f, -10.0f, 50.0f - 1.2*(TIME-SCENE_3_START));
     model_view *= Scale(20.0, 1.0, 60.0);
     model_view *= RotateX(-90.0);
     drawDecal(gl_textures[10]);
@@ -640,9 +757,11 @@ void display(void)
 	numFrames += 1.0;
 	INST_FPS = 1.0/ (PTM.GetElapsedTime());
 	if( Animate )
-		AV_FPS = numFrames/TIME;	
+		AV_FPS = numFrames/TM.GetElapsedTime();	
 	else
+	{
 		AV_FPS = INST_FPS;
+	}
 	PTM.Reset();
 	printf("\rTIME:  %.2fs  AV.FPS:  %.2f  INST.FPS:  %.2f    ", TIME, AV_FPS, INST_FPS) ;	
     // Clear the screen with the background colour (set in myinit)
@@ -652,22 +771,41 @@ void display(void)
     
 	if ( SCENE_0_START <= TIME && TIME < SCENE_0_END ) //titlecard 1
 	{
-        Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+        Camera.x = 0.0f; Camera.y= 0.0f;
         Camera.Rx = 0.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+		if ( TIME < SCENE_0_END-1)
+			Camera.z = sinBetween(SCENE_0_START, SCENE_0_END-1.0, -3.0f, -1.5f, TIME);
 		place_camera();
+		drawMCube(gl_textures[2]);
 	}
 	else if ( SCENE_1_START <= TIME && TIME < SCENE_1_END ) //titlecard 2
 	{
-
+		model_view *= Angel::LookAt( eye, ref, up );
+		glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
+	    //glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
+		drawMCube(gl_textures[2]);
 	}
 	else if (SCENE_2_START <= TIME && TIME < SCENE_2_END ) // along time ago
 	{
+		default_camera();
+		place_camera();
+
+		double fade = sinBetween(SCENE_2_START, SCENE_2_END, 1.0, 0.0, TIME);
+		glUniform1f(uFade, (float)fade);
+		glUniform1i(uEnableFade, 1);
+	    glUniform1i( uEnableSkybox, 1);
+    	glEnable(GL_BLEND);
+    	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		model_view *= Scale(15.0, 15.0, 1.0);
+		drawDecal(gl_textures[5]);
+		glUniform1i(uEnableFade, 0);
+		glUniform1i( uEnableSkybox, 0);
 
 	}
 	else if ( SCENE_3_START <= TIME && TIME < SCENE_3_END ) // title crawl & opening ships
 	{
     	Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
-    	Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+    	Camera.Rx = 25.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f; 
         place_camera();
         draw_stars();
 		if ( TIME < 115.00)
@@ -676,72 +814,6 @@ void display(void)
 	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END ) // forward engines hit
     {
 	}
-    //place_camera(); 
-	//draw_stars();
-    //mat4 view = model_view;
-    
-    
-    //model_view = Angel::LookAt(eye, ref, up);//just the view matrix;
-/*
-    // Previously glScalef(Zoom, Zoom, Zoom);
-    //model_view *= Scale(Zoom);
-	mvstack.push(model_view);
-	mvstack.push(model_view);
-
-    // Draw Something
-    set_colour(0.8f, 0.8f, 0.8f);
-    drawSphere(gl_textures[2]);
-
-    // Previously glTranslatef(3,0,0);
-    model_view *= Translate(3.0f, 0.0f, 0.0f);
-
-    // Previously glScalef(3,3,3);
-	mvstack.push(model_view);
-	model_view *= RotateY(20.0f * TIME);
-    model_view *= Scale(3.0f, 6.0f, 3.0f);
-    drawCube(gl_textures[0], gl_textures[1]);
-	model_view = mvstack.pop();
-
-    // And extra shapes!
-    //model_view *= Scale(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f);
-    model_view *= Translate(3.0f, 0.0f, 0.0f);
-    //set_colour(1.0f, 1.0f, 0.0f);
-    drawCone(gl_textures[2]);
-
-    model_view *= Translate(-9.0f, 0.0f, 0.0f);
-    set_colour(1.0f, 1.0f, 1.0f);
-    drawCylinder(gl_textures[2]);
-
-	model_view *= Translate(-3.0f, 0.0f, 0.0f);
-	drawMCube(gl_textures[2]);
-
-	model_view *= Translate(-3.0f, 0.0f, 0.0f);
-	drawWedge(gl_textures[5]);
-
-	model_view *= Translate(-3.0f, 0.0f, 0.0f);
-	model_view *= Scale(1.5f, 3.0f, 0.5f);
-	model_view *= RotateY(45.0);	
-	drawPyramid(gl_textures[6]);
-
-	model_view = mvstack.pop();
-	model_view *= Translate(0.0, -9.0f, 0.0f);
-	model_view *= RotateX(-25.0);
-	model_view *= Translate(0.0f, 0.0, 18.8f - TIME*TIME);
-	model_view *= Scale(6.0,3.0,1.0);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glUniform1i( uEnableSkybox, 1);
-	drawDecal(gl_textures[9]);
-
-	model_view = mvstack.pop();
-	model_view *= Translate(0.0f, -10.0f, 50.0f - 2.0*TIME);
-	model_view *= Scale(20.0, 1.0, 60.0);
-	model_view *= RotateX(-90.0);
-	drawDecal(gl_textures[10]);
-
-    glUniform1i( uEnableSkybox, 0);
-	glDisable(GL_BLEND);
-*/	
     glutSwapBuffers();
     if(Recording == 1)
         FrSaver.DumpPPM(Width, Height) ;
@@ -836,8 +908,8 @@ void idleCB(void)
         else
             TIME += 0.033 + OFFSET; // save at 30 frames per second.        
 
-        eye.x = 20*sin(TIME);
-        eye.z = 20*cos(TIME);
+        eye.x = 7*sin(TIME);
+        eye.z = 7*cos(TIME);
         
         
 		if (Recording)
