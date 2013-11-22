@@ -77,7 +77,7 @@ GLuint texture_cube;
 GLuint texture_earth;
 GLuint texture_bump;
 
-const int max_textures = 10;
+const int max_textures = 11;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -89,7 +89,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"colorpyramid.tga",		//6
 			"starfield_skybox.tga",  //7
 			"starfield_skysphere.tga", //8
-			"transparency_test.tga" //9
+			"transparency_test.tga", //9
+			"titlecrawl.tga" //10
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -605,7 +606,8 @@ void display(void)
         r[1][0], r[1][1], r[1][2], r[1][3],
         r[2][0], r[2][1], r[2][2], r[2][3],
         r[3][0], r[3][1], r[3][2], r[3][3]);
-    model_view *= mat_arcball_rot;
+    //model_view *= mat_arcball_rot;
+    model_view *= RotateX(25.0);
 	model_view *= Translate(Camera.x, Camera.y, Camera.z);
     
 
@@ -620,6 +622,7 @@ void display(void)
     model_view *= Scale(Zoom);
 	mvstack.push(model_view);
 	mvstack.push(model_view);
+    mvstack.push(model_view);
 
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
 	model_view *= Scale(200.0f);
@@ -665,12 +668,21 @@ void display(void)
 	drawPyramid(gl_textures[6]);
 
 	model_view = mvstack.pop();
-	model_view *= Translate(0.0f, 0.0f, 19.0f - TIME*TIME);
-	model_view *= Scale(4.0,2.0,1.0);
+	model_view *= Translate(0.0, -9.0f, 0.0f);
+	model_view *= RotateX(-25.0);
+	model_view *= Translate(0.0f, 0.0, 18.8f - TIME*TIME);
+	model_view *= Scale(6.0,3.0,1.0);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUniform1i( uEnableSkybox, 1);
 	drawDecal(gl_textures[9]);
+
+	model_view = mvstack.pop();
+	model_view *= Translate(0.0f, -10.0f, 50.0f - 2.0*TIME);
+	model_view *= Scale(20.0, 1.0, 60.0);
+	model_view *= RotateX(-90.0);
+	drawDecal(gl_textures[10]);
+
     glUniform1i( uEnableSkybox, 0);
 	glDisable(GL_BLEND);
 	
