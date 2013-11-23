@@ -882,6 +882,17 @@ void drawImperialBastards(double y)
 
 }
 
+void drawMan(double throwDone)
+{
+	mvstack.push(model_view);
+	set_colour(162.0/256.0, 55.0/256.0, 156/256.0);
+	model_view *= RotateX(90.0);
+	model_view *= Scale(1.0, 0.5, 1.6);
+	drawCylinder();
+	set_colour(1.0,1.0,1.0);
+	mvstack.pop();
+}
+
 // Display Function (Primary Changes)
 void display(void)
 {
@@ -1008,8 +1019,7 @@ void display(void)
 		Camera.Rx = 0.0;
 		Camera.z = -5.0;
 		place_camera();
-		draw_stars();
-		draw_laser(0,0,0,100.0,SCENE_4_START, SCENE_4_START+1,0,0,TIME);
+		drawMan(0.0);
 	}
     glutSwapBuffers();
     if(Recording == 1)
