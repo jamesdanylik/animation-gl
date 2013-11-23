@@ -742,38 +742,182 @@ void generateCylinder(GLuint program, ShapeData* cylData)
 //   2. cargo bay area
 //   3. back face
 
-/*
+
+point3 find_normal( point4 a, point4 b, point4 c)
+{
+	double x1 = a.x-b.x;
+	double y1 = a.y-b.y;
+	double z1 = a.z-b.z;
+	double x2 = c.x-b.x;
+	double y2 = c.y-b.y;
+	double z2 = c.z-b.z;
+	
+	double nX = (y1*z2)-(z1*y2);
+	double nY = (z1*x2)-(x1*z2);
+	double nZ = (x1*y2)-(y1*x2);
+
+	double n = sqrt((nX*nX) + (nY*nY) + (nZ*nZ));
+
+	if ( n != 0)
+	{
+		nX /= n;
+		nY /= n;
+		nZ /= n;
+	}
+	return point3(nX, nY, nZ);
+}
+
 const int numSDVertices = 42; //(14 traingles) * (3points/traingle)
 
-const double sDWidth = 10.15f;
-const double sDLength = 16.0f;
-const double sDThickness = 1.0f; 
-const double sDCBSize = 3.0f;
+const double sDWidth = 2.15f;
+const double sDLength = 4.0f;
+const double sDThickness = 0.3f; 
+
+point4 sDPoints[numSDVertices];
+point3 sDNormals[numSDVertices];
+point2 sDUV[numSDVertices];
+
+
+int sDI = 0;
 
 point4 sDVertices[9] = {
-	point4( sDLength/2, sDThickness/2, 0.0f), //top prow point
-	point4( sDLength/2,-sDThickness/2, 0.0f), //bottom prow point
-	point4(-sDLength/2, sDThickness/2, sDWidth/2), // right back corner top
-	point4(-sDLength/2,-sDThickness/2, sDWidth/2), // right back corner bottom
-	point4(-sDLength/2, sDThickness/2, -sDWidth/2),//left back corner top
-	point4(-sDLength/2,-sDThickness/2, -sDWidth/2),//left back corner bottom
-	point4(-sDLength/2, (sDThickness/2)*5, 0.0f), // back top point
-	point4(-sDLength/2, (sDThickness/2)*5, 0.0f), // back bottom point
+	point4( sDLength/2, sDThickness/2, 0.0f,1.0), //top prow point                     0
+	point4( sDLength/2,-sDThickness/2, 0.0f,1.0), //bottom prow point                  1
+	point4(-sDLength/2, sDThickness/2, sDWidth/2,1.0), // right back corner top        2
+	point4(-sDLength/2,-sDThickness/2, sDWidth/2,1.0), // right back corner bottom     3
+	point4(-sDLength/2, sDThickness/2, -sDWidth/2,1.0),//left back corner top          4
+	point4(-sDLength/2,-sDThickness/2, -sDWidth/2,1.0),//left back corner bottom       5
+	point4(-sDLength/2, (sDThickness/2)*5, 0.0f,1.0), // back top point                6
+	point4(-sDLength/2, (sDThickness/2)*5, 0.0f,1.0), // back bottom point             7
 	point4(-sDLength/2, 0.0f, 0.0f) // back center
-	point4(-sDCBSize, (-(sDThickness/2*5)/sDLength)*(-sDCBSize-sDLength/2), 0.0f) // back cargo bay ridge
-	point4(0.0f, 
 };
 
 
-void sDTriangle( int a, int b, int c, point3 &normal, int face )
+void sDTriangle( int a, int b, int c, point3 &normal )
 {
+    sDPoints[sDI] = sDVertices[a]; 
+	sDNormals[sDI] = normal; 
+	sDUV[sDI] = point2(0.0, 1.0f);
+    sDI++;
+    sDPoints[sDI] = sDVertices[b]; 
+	sDNormals[sDI] = normal; 
+	sDUV[sDI] = point2(0.0, 0.0f);
+    sDI++;
+    sDPoints[sDI] = sDVertices[c]; 
+	sDNormals[sDI] = normal; 
+	sDUV[sDI] = point2(1.0f, 0.0f);
+    sDI++;	
+}
+
+void sDQuad( int a, int b, int c, int d, point3 &normal )
+{
+    sDPoints[sDI] = sDVertices [a]; sDNormals[sDI] = normal;
+    sDUV[sDI] = point2(0.0, 1.0f); sDI++;
+    sDPoints[sDI] = sDVertices [b]; sDNormals[sDI] = normal;
+    sDUV[sDI] = point2(0.0, 0.0f); sDI++;
+    sDPoints[sDI] = sDVertices [c]; sDNormals[sDI] = normal;
+    sDUV[sDI] = point2(1.0, 0.0f); sDI++;
+    sDPoints[sDI] = sDVertices [a]; sDNormals[sDI] = normal;
+    sDUV[sDI] = point2(0.0, 1.0f); sDI++;
+    sDPoints[sDI] = sDVertices [c]; sDNormals[sDI] = normal;
+    sDUV[sDI] = point2(1.0, 0.0f); sDI++;
+    sDPoints[sDI] = sDVertices [d]; sDNormals[wIndex] = normal;
+    sDUV[wIndex] = point2(1.0, 1.0f); sDI++;
+}
+
+
+void generateSD(GLuint program, ShapeData* sDData)
+{
+	point3 normal = find_normal(sDVertices[6], sDVertices[0], sDVertices[2]);
+	sDTriangle(6, 2, 0, normal );
+	normal = find_normal(sDVertices[6], sDVertices[4], sDVertices[2]);
+	sDTriangle(6, 2, 4, normal );
+	
+	normal = find_normal(sDVertices[0], sDVertices[1], sDVertices[3]);
+	sDQuad(0, 1, 3, 2, normal);
+
+	//sDTriangle(
+    sDData->numVertices = numSDVertices;
+
+    // Create a vertex array object
+    glGenVertexArrays( 1, &sDData->vao );
+    glBindVertexArray( sDData->vao );
+
+    // Set vertex attributes
+    setVertexAttrib(program,
+                    (float*)sDPoints,  sizeof(sDPoints),
+                    (float*)sDNormals, sizeof(sDNormals),
+                    (float*)sDUV, sizeof(sDUV));
 
 }
 
-void sDQuad( int a, int b, int c, int d, point3 &normal, int face )
+const int numSPyrVertices = 18; //( (1 face)(2 triangles) + (4 faces)(1 triangle) ) 
+                                //* 3 points/traingle
+
+point4 pSVertices[5] = {
+    point4( -0.5, -0.25, -0.5, 1.0), //0
+    point4( -0.25, -0.25,  0.25, 1.0), //1
+    point4(  0.5, -0.25,  0.5, 1.0), //2
+    point4(  0.25, -0.25, -0.25, 1.0), //3
+    point4(  0.0,  2.0,  0.0, 1.0), //4
+};
+
+point4 pyrSPoints    [numSPyrVertices];
+point3 pyrSNormals   [numSPyrVertices];
+point2 pyrSUV        [numSPyrVertices];
+
+
+
+int pSIndex = 0;
+
+void pSTriangle( int a, int b, int c, const point3 &normal)
 {
+    pyrSPoints[pSIndex] = pSVertices[a]; pyrSNormals[pSIndex] = normal;
+    pyrSUV[pSIndex] = point2(0.0, 1.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[b]; pyrSNormals[pSIndex] = normal;
+    pyrSUV[pSIndex] = point2(0.0, 0.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[c]; pyrSNormals[pSIndex] = normal;
+    pyrSUV[pSIndex] = point2(1.0/2, 0.0f); pSIndex++;
+}
+
+void generateSPyramid(GLuint program, ShapeData *pyramidSData)
+{
+	point3 normal1 = find_normal(pSVertices[0], pSVertices[1], pSVertices[4]);
+    pSTriangle( 0, 1, 4, normal1);// point3( -sqrt(1.0/2), sqrt(1.0/2), 0.0f) );
+	point3 normal2 = find_normal(pSVertices[1], pSVertices[2], pSVertices[4]);
+    pSTriangle( 1, 2, 4, normal2); //point3( 0.0f, sqrt(1.0/2), sqrt(1.0/2) ) );
+	point3 normal3 = find_normal(pSVertices[2], pSVertices[3], pSVertices[4]);
+    pSTriangle( 2, 3, 4, normal3  );
+	point3 normal4 = find_normal(pSVertices[3], pSVertices[0], pSVertices[4]);
+
+    pSTriangle( 3, 0, 4, normal4 );
+
+    point3 bottomNormal = point3(0.0f, -1.0f, 0.0f);
+
+    pyrSPoints[pSIndex] = pSVertices[0]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(0, 1.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[1]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(0, 0.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[2]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(1.0f, 0.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[0]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(0, 1.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[2]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(1.0f, 0.0f); pSIndex++;
+    pyrSPoints[pSIndex] = pSVertices[3]; pyrSNormals[pSIndex] = bottomNormal;
+    pyrSUV[pSIndex] = point2(1.0, 1.0f); pSIndex++;
+
+    pyramidSData->numVertices = numSPyrVertices;
+
+    glGenVertexArrays( 1, &pyramidSData->vao );
+    glBindVertexArray( pyramidSData->vao );
+
+    setVertexAttrib( program,
+        (float*)pyrSPoints,  sizeof(pyrSPoints),
+        (float*)pyrSNormals, sizeof(pyrSNormals),
+        (float*)pyrSUV,      sizeof(pyrSUV));
 
 }
 
 
-*/
+

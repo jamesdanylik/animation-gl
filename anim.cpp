@@ -94,7 +94,7 @@ typedef char STR[STRLEN];
 #define Y 1
 #define Z 2
 //texture
-const int max_textures = 16;
+const int max_textures = 17;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
 			"cobblestone.tga",		//0
@@ -112,7 +112,8 @@ const char texture_filenames[max_textures][max_filename_length] = {
 			"earth.tga", 			//12
 			"flames.tga",			//13
 			"titlecard.tga",    //14
-			"rebelspaceship.tga" //15
+			"rebelspaceship.tga",
+			"spaceship.tga"		 //15
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -129,6 +130,8 @@ ShapeData pyramidData;
 ShapeData iCubeData;
 ShapeData iSphereData;
 ShapeData decalData;
+ShapeData sDData;
+ShapeData pyrSData;
 // Matrix Stack delcaration and shader variables.
 MatrixStack  mvstack;
 mat4         model_view;
@@ -269,6 +272,32 @@ void drawPyramid(GLuint diffuse, GLuint bump)
 	drawPyramid(diffuse);
     glUniform1i( uEnableBumpTex, 0);
 }
+
+void drawSPyramid(void)
+{
+    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view);
+    glBindVertexArray( pyrSData.vao );
+    glDrawArrays( GL_TRIANGLES, 0, pyrSData.numVertices);
+}
+
+void drawSPyramid(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawSPyramid();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawSPyramid(GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawSPyramid(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
 
 
 // CUBE DRAW METHODS ////////////////////////////////////////////////
@@ -429,6 +458,32 @@ void drawISphere( GLuint diffuse, GLuint bump)
     glUniform1i( uEnableBumpTex, 1);
     glActiveTexture(GL_TEXTURE0);
     drawISphere(diffuse);
+    glUniform1i( uEnableBumpTex, 0);
+}
+
+// DRAW SD //////////////////////////////////////////////////////////
+void drawSD(void)
+{
+    glUniformMatrix4fv( uModelView, 1, GL_TRUE, model_view );
+    glBindVertexArray( sDData.vao );
+    glDrawArrays( GL_TRIANGLES, 0, sDData.numVertices );
+}
+
+void drawSD(GLuint diffuse)
+{
+    glBindTexture( GL_TEXTURE_2D, diffuse);
+    glUniform1i( uEnableTex, 1);
+    drawSD();
+    glUniform1i( uEnableTex, 0);
+}
+
+void drawSD( GLuint diffuse, GLuint bump)
+{
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, bump);
+    glUniform1i( uEnableBumpTex, 1);
+    glActiveTexture(GL_TEXTURE0);
+    drawSD(diffuse);
     glUniform1i( uEnableBumpTex, 0);
 }
 
@@ -672,6 +727,8 @@ void myinit(void)
 	generateICube(program, &iCubeData);
 	generateISphere(program, &iSphereData);
 	generateDecal(program, &decalData);
+	generateSD(program, &sDData);
+	generateSPyramid(program, &pyrSData);
 
     uModelView  = glGetUniformLocation( program, "ModelView"  );
     uProjection = glGetUniformLocation( program, "Projection" );
@@ -1093,6 +1150,73 @@ void drawRebelEngineFlame()
 	model_view *= Translate(0.0,0.0,-1.0);
 }
 
+void drawEngineFlame()
+{
+	glUniform1i( uEnableSkybox, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    set_colour(1.0,1.0,1.0);
+	model_view *= Translate(0.0,0.0,3.0);
+    model_view *= RotateZ(10*TIME);
+    drawCone(gl_textures[13]);
+    model_view *= RotateZ(-10*TIME);
+	model_view *= Translate(0.0,0.0,-3.0);
+    set_colour(1.0,1.0,1.0);
+    glUniform1i( uEnableSkybox, 0);
+    glDisable(GL_BLEND);
+
+}
+
+void drawImperials(double imperialY)
+{
+	mvstack.push(model_view);
+
+	model_view *= Translate(imperialY, -15.0, 0.0);
+
+
+	model_view *= RotateZ(90);
+	model_view *= RotateY(-45);
+
+	mvstack.push(model_view);
+
+	model_view *= Scale(50);
+	drawSPyramid(gl_textures[16]);//, gl_textures[6]);
+	model_view *= Scale(1/50.0);
+	model_view *= RotateY(-45);
+    //mvstack.push(model_view);
+	model_view *= RotateZ(-90);
+	mvstack.push(model_view);
+	model_view *= Translate(0.0, 0.0, 1.2);
+	model_view *= Scale(1.0, 1.0, 2.0);
+	drawCube( gl_textures[16]);  //gl_textures[6]);
+	model_view *= Scale(1.0, 1.0, 1/2.0);	
+	model_view *= Translate(0.0, 0.0, 1.0);
+	model_view *= Scale(1.0, 3.0, 1.0);
+	drawCube( gl_textures[16]); //, gl_textures[6]);
+	model_view = mvstack.pop();
+	model_view *= RotateY(90.0);
+	model_view *= RotateZ(90.0);
+	model_view *= Translate(0.0, 0.0, 0.0);
+
+	model_view = mvstack.pop();
+//	drawEngineFlame();
+//  model_view *= RotateZ(-90.0);
+//  model_view *= RotateY(-90.0);
+//	model_view *= Translate(50.0, -0.0, 0);
+//	model_view *= Scale(2.0/3.0);
+//    drawEngineFlame();
+//	model_view *= Scale(3.0/2.0);
+//	model_view *= RotateZ(-90.0);
+//    model_view *= RotateY(-90.0);
+//    model_view *= Translate(4.0, 0.0, 0.0);
+//    model_view *= Scale(2.0/3.0);
+//    drawEngineFlame();
+	//model_view *= Scale(3.0/2);
+
+
+	model_view = mvstack.pop();
+}
+
 void drawRebels(double rebelY)
 {
         mvstack.push(model_view);
@@ -1386,6 +1510,15 @@ void display(void)
 			{
 				Camera.Rx = 90.0;
 			}
+
+			if( TIME >140.0 && TIME <SCENE_3_END)
+			{
+				glUniform4f(uLightPos,  -600.0f, -600.0f, 0.0f, 0.0f);
+				Camera.x = -10.0;
+				Camera.y = 300.0;
+				Camera.z = -15.0f;
+				Camera.Rx = 270.0;
+			}
 			place_camera();
 			draw_stars();
 			draw_planets();
@@ -1393,6 +1526,8 @@ void display(void)
 			model_view *= RotateZ(90.0);
 			model_view *= RotateX(90.0);
 			drawRebels(rebelY);
+			//model_view *= RotateY(45.0);
+			drawImperials(imperialY);
 			model_view *= RotateX(-90);
 			model_view *= RotateZ(-90.0);
 			model_view *= Translate(0.0, 4.0, -15.0);
@@ -1411,74 +1546,11 @@ void display(void)
 			}
 		}
 	}
-	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END +100.0f ) // forward engines hit
+	else if ( SCENE_4_START <= TIME ) // forward engines hit
     {
-		default_camera();
-		Camera.z = -75;
-		Camera.Rx = 0.0;
-		place_camera();
-		
-		mvstack.push(model_view);
+		Animate = 1 - Animate;
+		jumpTime(0.0);
 
-		model_view *= RotateY(90.0);
-		model_view *= Scale(1.0,1.0,4.0f);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-		drawRebelEngineFlame();
-		model_view *= Translate(2.0f, 0.0f, 0.0f);
-		drawCylinder(gl_textures[15], gl_textures[6]);		
-		drawRebelEngineFlame();
-		model_view *= Translate(-4.0f, 0.0, 0.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-		model_view *= Translate(-1.0f, 1.8, 0.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-		model_view *= Translate(2.0f,0.0,0.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-		model_view *= Translate(2.0f,0.0,0.0);
-        drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-		model_view *= Translate(2.0f,0.0,0.0);
-        drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-
-		model_view *= Translate(0.0, -3.6, 0.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-        model_view *= Translate(-2.0f,0.0,0.0);
-        drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-        model_view *= Translate(-2.0f,0.0,0.0);
-        drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-        model_view *= Translate(-2.0f,0.0,0.0);
-        drawCylinder(gl_textures[15], gl_textures[6]);
-        drawRebelEngineFlame();
-		model_view *= Scale(1.0, 1.0, 1/4.0);
-		model_view *= Translate(1.0+2.0, 1.8, -6.0);
-		model_view *= RotateX(-90.0);
-		model_view *= Scale(8.0, 8.0, 5.0);
-		drawPyramid(gl_textures[15], gl_textures[6]);
-		model_view *= Scale(1/8.0, 1/8.0, 1/5.0);
-		model_view *= RotateX(90.0);
-		model_view *= Translate(0.0, 0.0, -4.0-4);
-		model_view *= RotateZ(90);
-		model_view *= Scale(1.0, 1.0, 8.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);		
-		model_view *= Scale(1.0, 1.0, 1/8.0);
-		model_view *= RotateZ(45.0);
-		model_view *= Scale(2.5, 2.5, 7.0);
-		drawCube(gl_textures[15], gl_textures[6]);
-		model_view *= Scale(1/2.5, 1/2.5, 1/7.0);
-		model_view *= RotateZ(-45.0);
-		model_view *= Translate(0.0, 0.0, -4.0-4.0);
-		model_view *= RotateX(90.0);
-		model_view *= Scale(2.0, 2.0, 4.0);
-		drawCylinder(gl_textures[15], gl_textures[6]);
-
-
-		model_view = mvstack.pop();
 	}
     glutSwapBuffers();
     if(Recording == 1)

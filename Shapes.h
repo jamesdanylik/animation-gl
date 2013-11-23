@@ -22,5 +22,6 @@ void generatePyramid(GLuint program, ShapeData* pyramidData);
 void generateICube(GLuint program, ShapeData* iCubeData);
 void generateISphere(GLuint program, ShapeData* iSphereData);
 void generateDecal(GLuint program, ShapeData* decalData);
-
+void generateSD(GLuint program, ShapeData* sDData);
+void generateSPyramid(GLuint program, ShapeData* pyrSData);
 #endif
