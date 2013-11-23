@@ -97,16 +97,16 @@ typedef char STR[STRLEN];
 const int max_textures = 13;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
-			"cobblestone.tga",		//0
-			"cobblestone_bump.tga",	//1
-			"colorcube.tga",		//2
+			"cobblestone.tga",		//0 //UNUSED
+			"cobblestone_bump.tga",	//1 //UNUSED
+			"clouds.tga",			//2 
 			"moon.tga",				//3
-			"moon_bump.tga",		//4
+			"moon_bump.tga",		//4 //UNUSED
 			"mars.tga",				//5
-			"mars_bump.tga",		//6
-			"starfield_skybox.tga",  //7
+			"redpixel.tga",		//6  //UNUSED
+			"greenpixel.tga",      //7 //UNUSED
 			"starfield_skysphere.tga", //8
-			"transparency_test.tga", //9
+			"starwarstitle.tga", 	//9 
 			"titlecrawl.tga", 		//10
 			"alongtimeago.tga", 	//11
 			"earth.tga", 			//12
@@ -458,6 +458,15 @@ double sinBetween(double startTime, double endTime,
 
 }
 
+double linearBetween(double startTime, double endTime,
+					 double startLoc, double endLoc,
+					 double TIME )
+{
+	double locDiff = endLoc - startLoc;
+	double scaleFactor = (TIME-startTime)/(endTime-startTime);
+	return startLoc + locDiff*scaleFactor;
+}
+
 // Key handler
 void myKey(unsigned char key, int x, int y)
 {
@@ -683,7 +692,7 @@ void myinit(void)
     glUniform4f(uAmbient,    0.2f,  0.2f,  0.2f, 1.0f);
     glUniform4f(uDiffuse,    0.6f,  0.6f,  0.6f, 1.0f);
     glUniform4f(uSpecular,   0.2f,  0.2f,  0.2f, 1.0f);
-    glUniform4f(uLightPos,  100.0f, 80.0f, 0.0f, 0.0f);
+    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
     glUniform1f(uShininess, 100.0f);
 	glUniform1f(uFade, 1.0f);
 
@@ -723,13 +732,13 @@ void draw_stars()
 {
 	mvstack.push(model_view);
 	model_view *= Translate(-Camera.x, -Camera.y, -Camera.z);
-	model_view *= RotateX(90.0);
+	model_view *= RotateX(-45.0);
 	model_view *= RotateY(90.0);
     model_view *= Scale(1000.0f);
     glUniform1i( uEnableSkybox, 1);
     drawISphere(gl_textures[8]);
     glUniform1i( uEnableSkybox, 0);
-    model_view *= Scale(1/200.0);
+    model_view *= Scale(1/1000.0);
 	model_view = mvstack.pop();
 }
 
@@ -785,6 +794,7 @@ void draw_title_crawl()
     drawDecal(gl_textures[10]);
 
     glUniform1i( uEnableSkybox, 0);
+	glUniform1i( uEnableFade, 0);
     glDisable(GL_BLEND);
 	model_view = mvstack.pop();
 }
@@ -793,24 +803,83 @@ double earth_rotation = 0.0f;
 void draw_planets()
 {
 	mvstack.push(model_view);
-	model_view *= Translate(0.0, -100.0, -20.0);
-	model_view *= Scale(2.0);
-	drawSphere(gl_textures[3], gl_textures[4]);
+	model_view *= Translate(0.0, -200.0, -60.0+20.0);
+	model_view *= Scale(4.0);
+	drawSphere(gl_textures[3]);//, gl_textures[4]);
 	model_view = mvstack.pop();
 
 	mvstack.push(model_view);
-	model_view *= Translate(-20.0, -70.0, 5.0);
-	model_view *= RotateY(1.7*TIME);
-	model_view *= Scale(6.0);
+	model_view *= Translate(-100.0, -200.0, 5.0+20.0);
+	model_view *= RotateY(1.3*TIME);
+	model_view *= Scale(25.0);
 	drawSphere(gl_textures[12]);
 	model_view = mvstack.pop();
 
 	mvstack.push(model_view);
-	model_view *= Translate(0.0f, -80.0f, 550.0f);
-	model_view *= Scale(500.0);
-	drawSphere(gl_textures[5]);
-	
+	set_colour(1.0,1.0,1.0);
+	model_view *= Translate(0.0f, -50.0f, (15.0+100.0f+20.0));
+	model_view *= RotateX(TIME/4);
+	model_view *= Scale(100.0);
+	//glUniform1f(uEnableSkybox, 1);
+	drawSphere(gl_textures[5]);//gl_textures[6]);
+	//glUniform1f(uEnableSkybox, 0);
 	model_view = mvstack.pop();
+}
+
+void draw_laser(double x, double z, double startY, double endY,
+				double startTime, double endTime, int color, 
+				int hit, double TIME)
+{
+	double laserTimeout = 5.0;
+	if ( TIME < startTime || (TIME > endTime && hit) || (TIME > endTime + laserTimeout ) )
+		return;
+	double laserLen = 7.0;
+	double hitSize = 4.0;
+	double hitLen = 0.05;
+	double yPos = startY-laserLen + (endY-startY)*(TIME-startTime)/(endTime-startTime);
+
+    glUniform1f(uEnableSkybox, 1);
+	mvstack.push(model_view);
+	if ( color <= 0)
+		set_colour(1.0, 0.0, 0.0);
+	else
+		set_colour(0.0, 1.0, 0.0);
+	model_view *= Translate(x, yPos, z);
+	model_view *= RotateX(90.0);
+	model_view *= Scale(1.0/20, 1.0/20, laserLen);
+	glUniform1f(uEnableSkybox, 1);
+	drawCylinder();
+	set_colour(1.0, 1.0, 1.0);
+	glUniform1f(uEnableSkybox, 0);
+	model_view = mvstack.pop();
+	if ( TIME > endTime - hitLen && hit)
+	{
+		mvstack.push(model_view);
+		model_view *= Translate(x, endY, z);
+		model_view *= RotateX(90.0);
+		model_view *= Scale(hitSize);
+		set_colour(0.0f, 1.0f, 0.0f);
+	    glEnable(GL_BLEND);
+   		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glUniform1i( uEnableSkybox, 1);
+		drawDecal(gl_textures[2]);
+		glUniform1i( uEnableSkybox, 0);
+		glDisable(GL_BLEND);
+		model_view = mvstack.pop();
+		set_colour(1.0, 1.0, 1.0);
+	}
+}
+
+void drawRebelScum(double y)
+{
+	mvstack.push(model_view);
+
+	model_view = mvstack.pop();
+}
+
+void drawImperialBastards(double y)
+{
+
 }
 
 // Display Function (Primary Changes)
@@ -835,6 +904,7 @@ void display(void)
 	{
         Camera.x = 0.0f; Camera.y= 0.0f;
         Camera.Rx = 0.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
+	    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
 		if ( TIME < SCENE_0_END-1)
 			Camera.z = sinBetween(SCENE_0_START, SCENE_0_END-1.0, -3.0f, -1.5f, TIME);
 		place_camera();
@@ -842,12 +912,16 @@ void display(void)
 	}
 	else if ( SCENE_1_START <= TIME && TIME < SCENE_1_END ) //titlecard 2
 	{
+	    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
+		mvstack.push(model_view);
 		model_view *= Angel::LookAt( eye, ref, up );
 		glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
 		drawMCube(gl_textures[2]);
+		model_view = mvstack.pop();
 	}
 	else if (SCENE_2_START <= TIME && TIME < SCENE_2_END ) // along time ago
 	{
+	    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
 		default_camera();
 		place_camera();
 		double fade;
@@ -875,13 +949,19 @@ void display(void)
     	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		model_view *= Scale(10.0, 2.0, 1.0);
 		drawDecal(gl_textures[11]);
+		model_view *= Scale(1/10.0, 1/2.0, 1/1.0);
 		glUniform1i(uEnableFade, 0);
 		glUniform1i( uEnableSkybox, 0);
 
 	}
 	else if ( SCENE_3_START <= TIME && TIME < SCENE_3_END ) // title crawl & opening ships
 	{
-		double panTime = 117.00;
+		double panTime = 119.00;
+		double laserTime = 130.0;
+		double laserLen = 0.5;
+		double laserOffset = 0.0;
+		double rebelY = 10.0f;
+		double imperialY = 50.0f;
 		if ( TIME < panTime)
 		{
 			Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
@@ -892,17 +972,44 @@ void display(void)
 		}
 		else if ( TIME < SCENE_3_END)
 		{
-			if ( TIME < 130.0 )
+			rebelY = linearBetween(laserTime-5.0f, SCENE_3_END, 0.0f, -300.0f, TIME);
+			imperialY = linearBetween(laserTime-5.0f, SCENE_3_END, 200.0f, -100.0f, TIME);
+			Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
+            glUniform4f(uLightPos,  600.0f, 600.0f, 000.0f, 0.0f);
+			if ( TIME < 127.0 )
 			{
-				Camera.Rx = sinBetween(panTime, 130.00, 25.0, 90.0, TIME);
+				Camera.Rx = sinBetween(panTime, 127.00, 25.0, 90.0, TIME);
+			}
+			else 
+			{
+				Camera.Rx = 90.0;
 			}
 			place_camera();
 			draw_stars();
 			draw_planets();
+			drawRebelScum(rebelY);
+			drawImperialBastards(imperialY);
+			for( int i = 0; i < 10; i ++)
+			{
+				draw_laser(1,16,imperialY,rebelY,laserTime+laserOffset, laserTime+laserLen+laserOffset,1,0,TIME);
+				draw_laser(2,15,imperialY,rebelY,laserTime+laserLen+laserOffset, laserTime+laserLen*2+laserOffset,1,1,TIME);
+				draw_laser(-2,17,rebelY,imperialY,laserTime+laserLen*3+laserOffset, laserTime+laserLen*4+laserOffset,0,0,TIME);
+				draw_laser(1,16,imperialY,rebelY,laserTime+laserLen*4+laserOffset, laserTime+laserLen*5+laserOffset,1,1,TIME);
+				draw_laser(-1,17,rebelY, imperialY,laserTime+laserLen*6+laserOffset, laserTime+laserLen*7+laserOffset,0,0,TIME);
+				draw_laser(-2,16,rebelY, imperialY,laserTime+laserLen*7+laserOffset, laserTime+laserLen*8+laserOffset,0,1,TIME);
+				draw_laser(1,15,imperialY,rebelY,laserTime+laserLen*9+laserOffset, laserTime+laserLen*10+laserOffset,1,1,TIME);
+				laserOffset += laserLen*10;
+			}
 		}
 	}
-	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END ) // forward engines hit
+	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END +100.0f ) // forward engines hit
     {
+		default_camera();
+		Camera.Rx = 0.0;
+		Camera.z = -5.0;
+		place_camera();
+		draw_stars();
+		draw_laser(0,0,0,100.0,SCENE_4_START, SCENE_4_START+1,0,0,TIME);
 	}
     glutSwapBuffers();
     if(Recording == 1)
@@ -926,12 +1033,10 @@ void instructions()
 {
     printf("Press:\n");
     printf("  s to save the image\n");
-    printf("  r to restore the original view.\n") ;
-    printf("  0 to set it to the zero state.\n") ;
     printf("  a to toggle the animation.\n") ;
     printf("  m to toggle frame dumping.\n") ;
     printf("  q to quit.\n");
-	printf("  i/k, j/l, u/o, to manually move the camera.\n");
+	printf("  Num to jump chapters.\n");
 }
 
 // start or end interaction
