@@ -886,9 +886,80 @@ void drawMan(double throwDone)
 {
 	mvstack.push(model_view);
 	set_colour(162.0/256.0, 55.0/256.0, 156/256.0);
+
+	// body, head, and shoulders
 	model_view *= RotateX(90.0);
-	model_view *= Scale(1.0, 0.5, 1.6);
-	drawCylinder();
+	model_view *= Scale(1.0, 0.5, 1.0);
+	drawCylinder(); // body
+	model_view *= Scale(1.0, 2.0, 1.0);
+	model_view *= RotateX(-90.0);
+	model_view *= Translate(0.0, 1.0+0.25, 0.0);
+	model_view *= RotateX(90.0);
+	model_view *= Scale(1.0/3,1.0/4, 1.0/3 );
+	drawCylinder(); //neck
+	model_view *= Scale(3.0, 4.0, 3.0);
+	model_view *= RotateX(-90.0);
+	model_view *= Translate(0.0, 1.25, 0.0);
+	drawSphere(); // head
+	model_view *= Translate(-1, -1.5, 0.0);
+	model_view *= Scale(0.25);
+	drawSphere(); //right shoulder
+	model_view *= Scale(4);
+
+	mvstack.push(model_view);
+
+	model_view *= Translate(2.0, 0.0, 0.0);
+	model_view *= Scale(0.25);
+	drawSphere(); //left shoulder
+	model_view *= Scale(4.0);
+
+	model_view *= Translate(0.55, 0.0, 0.0);
+	model_view *= RotateY(90);
+	model_view *= Scale(0.15, 0.15, 0.3);
+	drawCylinder(); // left bicep
+	model_view *= Scale(1/0.15, 1/0.15, 1.0/0.3);
+	model_view *= RotateY(-90);
+	model_view *= Translate(0.55, 0.0, 0.0);
+	model_view *= Scale(0.25);
+	drawSphere(); //left elbow
+	model_view *= Scale(4.0);
+	model_view *= Translate(0.75, 0.0, 0.0);
+	model_view *= RotateY(90);
+    model_view *= Scale(0.15, 0.15, 0.5);
+    drawCylinder(); //left forearm
+    model_view *= Scale(1/0.15, 1/0.15, 1/0.5);
+    model_view *= RotateY(-90);	
+	model_view *= Translate(0.75, 0.0, 0.0);
+	model_view *= RotateY(90);
+	model_view *= RotateX(90);
+	model_view *= Scale(0.25, 0.25, 1.0/20);
+	drawCylinder(); //left hand
+	
+	model_view = mvstack.pop();
+	model_view *= RotateY(180.0);
+
+    model_view *= Translate(0.55, 0.0, 0.0);
+    model_view *= RotateY(90);
+    model_view *= Scale(0.15, 0.15, 0.3);
+    drawCylinder(); // right bicep
+    model_view *= Scale(1/0.15, 1/0.15, 1.0/0.3);
+    model_view *= RotateY(-90);
+    model_view *= Translate(0.55, 0.0, 0.0);
+    model_view *= Scale(0.25);
+    drawSphere(); //right elbow
+    model_view *= Scale(4.0);
+    model_view *= Translate(0.75, 0.0, 0.0);
+    model_view *= RotateY(90);
+    model_view *= Scale(0.15, 0.15, 0.5);
+    drawCylinder(); //right forearm
+    model_view *= Scale(1/0.15, 1/0.15, 1/0.5);
+    model_view *= RotateY(-90);
+    model_view *= Translate(0.75, 0.0, 0.0);
+    model_view *= RotateY(90);
+    model_view *= RotateX(90);
+    model_view *= Scale(0.25, 0.25, 1.0/20);
+    drawCylinder(); //right hand
+
 	set_colour(1.0,1.0,1.0);
 	mvstack.pop();
 }
@@ -1016,9 +1087,10 @@ void display(void)
 	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END +100.0f ) // forward engines hit
     {
 		default_camera();
-		Camera.Rx = 0.0;
+		Camera.Rx = 25.0;
 		Camera.z = -5.0;
 		place_camera();
+		model_view *= Translate( 0.0, -6.0, -7.0 );
 		drawMan(0.0);
 	}
     glutSwapBuffers();
