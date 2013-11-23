@@ -94,22 +94,25 @@ typedef char STR[STRLEN];
 #define Y 1
 #define Z 2
 //texture
-const int max_textures = 13;
+const int max_textures = 16;
 const int max_filename_length = 30;
 const char texture_filenames[max_textures][max_filename_length] = {
-			"cobblestone.tga",		//0 //UNUSED
-			"cobblestone_bump.tga",	//1 //UNUSED
+			"cobblestone.tga",		//0
+			"cobblestone_bump.tga",	//1
 			"clouds.tga",			//2 
 			"moon.tga",				//3
-			"moon_bump.tga",		//4 //UNUSED
+			"cobblechuck.tga",		//4 
 			"mars.tga",				//5
-			"redpixel.tga",		//6  //UNUSED
-			"greenpixel.tga",      //7 //UNUSED
+			"spaceship_bump.tga",		//6  
+			"titlestart.tga",      //7
 			"starfield_skysphere.tga", //8
 			"starwarstitle.tga", 	//9 
 			"titlecrawl.tga", 		//10
 			"alongtimeago.tga", 	//11
 			"earth.tga", 			//12
+			"flames.tga",			//13
+			"titlecard.tga",    //14
+			"rebelspaceship.tga" //15
 };
 GLuint gl_textures[max_textures];
 TgaImage texture_images[max_textures];
@@ -543,7 +546,7 @@ void myKey(unsigned char key, int x, int y)
          	if ( audioRunning )
                 kill(audioPID, SIGKILL);
 			#endif
-            jumpTime(SCENE_2_START);
+            jumpTime(SCENE_3_START);
             TM.Reset();
             glutPostRedisplay() ;
             break ;
@@ -870,20 +873,13 @@ void draw_laser(double x, double z, double startY, double endY,
 	}
 }
 
-void drawRebelScum(double y)
-{
-	mvstack.push(model_view);
-
-	model_view = mvstack.pop();
-}
-
-void drawImperialBastards(double y)
-{
-
-}
-
+double lastCRX;
+double lastCRY;
+double lastCRZ;
 void drawMan(double throwDone)
 {
+	
+	double sub = .08;
 	mvstack.push(model_view);
 	set_colour(162.0/256.0, 55.0/256.0, 156/256.0);
 
@@ -907,61 +903,259 @@ void drawMan(double throwDone)
 	model_view *= Scale(4);
 
 	mvstack.push(model_view);
+	double lShoulderZ, lShoulderY, lElbowX, lElbowY;
+	double rShoulderZ, rShoulderY, rElbowX, rElbowY;
+    /* Namaste
+	lShoulderZ = -80.0;
+	lShoulderY = -20.0;
+	lElbowX = 40.0;
+	lElbowY = -110.0;
+	rShoulderZ = lShoulderZ;
+	rShoulderY = -lShoulderY;
+	rElbowX = -lElbowX - 180.0;
+	rElbowY = lElbowY;
+	*/
+	double windUpTime = 0.5;
+	double throwTime = 0.2 + windUpTime;
+	if ( throwDone == 0.0)
+	{
+    	lShoulderZ = -80.0;
+    	lShoulderY = -20.0;
+    	lElbowX = 40.0;
+    	lElbowY = -120.0;
+    	rShoulderZ = lShoulderZ;
+    	rShoulderY = -lShoulderY;
+    	rElbowX = -lElbowX - 180.0;
+    	rElbowY = lElbowY;
+	}
+	else if ( throwDone > 0.0 && throwDone < windUpTime )
+	{
+		lShoulderZ = sinBetween(0.0, windUpTime, -80, -20, throwDone);
+		lShoulderY = sinBetween(0.0, windUpTime, -20, 70, throwDone);
+		lElbowX    = sinBetween(0.0, windUpTime, 40, 40, throwDone);
+		lElbowY    = sinBetween(0.0, windUpTime, -120, 20, throwDone);
+
+		rShoulderZ  = sinBetween(0.0, windUpTime, -80, 0, throwDone);
+		rShoulderY  = sinBetween(0.0, windUpTime, -(-20), -(-120), throwDone);
+		rElbowX     = sinBetween(0.0, windUpTime, -(40.0)-180.0, -(40.)-180.0, throwDone);
+		rElbowY	   = sinBetween(0.0, windUpTime, -120, -20, throwDone);    
+	}
+	else if ( throwDone >= windUpTime && throwDone <= throwTime )
+	{
+		lShoulderZ = sinBetween(windUpTime, throwTime, -20, -60, throwDone);
+        lShoulderY = sinBetween(windUpTime, throwTime, 70, -120, throwDone);
+        lElbowX    = sinBetween(windUpTime, throwTime, 40, 40, throwDone);
+        lElbowY    = sinBetween(windUpTime, throwTime, 20, -2.0, throwDone);
+
+        rShoulderZ  = sinBetween(windUpTime, throwTime, 0, 160, throwDone);
+        rShoulderY  = sinBetween(windUpTime, throwTime, -(-120), -(-200), throwDone);
+        rElbowX     = sinBetween(windUpTime, throwTime, -(40.0)-180.0, -(0)-180.0, throwDone);
+        rElbowY     = sinBetween(windUpTime, throwTime, -20, 0, throwDone);
+	}
+	else if (throwDone >= throwTime && throwDone <= 1.0)
+	{
+        lShoulderZ = sinBetween(throwTime, 1.0, -60, -20, throwDone);
+        lShoulderY = sinBetween(throwTime, 1.0, -120, -10, throwDone);
+        lElbowX    = sinBetween(throwTime, 1.0, 40, 40, throwDone);
+        lElbowY    = sinBetween(throwTime, 1.0, -2.0, 20, throwDone);
+
+        rShoulderZ  = sinBetween(throwTime, 1.0, 160, -20,throwDone);
+        rShoulderY  = sinBetween(throwTime, 1.0, -(-200), -(-10), throwDone);
+        rElbowX     = sinBetween(throwTime, 1.0, -(0)-180.0,-(40)-180.0, throwDone);
+        rElbowY     = sinBetween(throwTime, 1.0, 0, 20, throwDone);
+	}
+
+
 
 	model_view *= Translate(2.0, 0.0, 0.0);
 	model_view *= Scale(0.25);
 	drawSphere(); //left shoulder
 	model_view *= Scale(4.0);
 
-	model_view *= Translate(0.55, 0.0, 0.0);
+    model_view *= RotateZ(lShoulderZ); // bend at left shoulder up/down
+	model_view *= RotateY(lShoulderY); //in/out
+	
+	model_view *= Translate(0.55-sub, 0.0, 0.0);
 	model_view *= RotateY(90);
 	model_view *= Scale(0.15, 0.15, 0.3);
 	drawCylinder(); // left bicep
 	model_view *= Scale(1/0.15, 1/0.15, 1.0/0.3);
 	model_view *= RotateY(-90);
-	model_view *= Translate(0.55, 0.0, 0.0);
+	model_view *= Translate(0.55-sub, 0.0, 0.0);
 	model_view *= Scale(0.25);
 	drawSphere(); //left elbow
 	model_view *= Scale(4.0);
-	model_view *= Translate(0.75, 0.0, 0.0);
+
+	model_view *= RotateX(lElbowX);//bend at left elbow	up/down
+	model_view *= RotateY(lElbowY);//in/out
+
+	model_view *= Translate(0.75-sub, 0.0, 0.0);
 	model_view *= RotateY(90);
     model_view *= Scale(0.15, 0.15, 0.5);
     drawCylinder(); //left forearm
     model_view *= Scale(1/0.15, 1/0.15, 1/0.5);
     model_view *= RotateY(-90);	
-	model_view *= Translate(0.75, 0.0, 0.0);
+	model_view *= Translate(0.75-sub, 0.0, 0.0);
 	model_view *= RotateY(90);
 	model_view *= RotateX(90);
 	model_view *= Scale(0.25, 0.25, 1.0/20);
 	drawCylinder(); //left hand
-	
+	if ( throwDone < throwTime - throwTime/20 )
+	{
+		lastCRX = lElbowX;
+		lastCRY = lShoulderY + lElbowY;
+		lastCRZ = lShoulderZ;
+		model_view *= Scale(4.0, 4.0, 20.0); //unscale
+		model_view *= Translate(0.0, 0.5, 0.0);
+		set_colour(0.8, 0.8, 0.8);
+		drawCube(gl_textures[0], gl_textures[1]);
+		set_colour(162.0/256.0, 55.0/256.0, 156/256.0);
+	}	
 	model_view = mvstack.pop();
 	model_view *= RotateY(180.0);
 
-    model_view *= Translate(0.55, 0.0, 0.0);
+    model_view *= RotateZ(rShoulderZ); // bend at right shoulder
+    model_view *= RotateY(rShoulderY);
+
+    model_view *= Translate(0.55-sub, 0.0, 0.0);
     model_view *= RotateY(90);
     model_view *= Scale(0.15, 0.15, 0.3);
     drawCylinder(); // right bicep
     model_view *= Scale(1/0.15, 1/0.15, 1.0/0.3);
     model_view *= RotateY(-90);
-    model_view *= Translate(0.55, 0.0, 0.0);
+    model_view *= Translate(0.55-sub, 0.0, 0.0);
     model_view *= Scale(0.25);
     drawSphere(); //right elbow
     model_view *= Scale(4.0);
-    model_view *= Translate(0.75, 0.0, 0.0);
+
+    model_view *= RotateX(rElbowX); // bend at right elbow
+    model_view *= RotateY(rElbowY);
+
+    model_view *= Translate(0.75-sub, 0.0, 0.0);
     model_view *= RotateY(90);
     model_view *= Scale(0.15, 0.15, 0.5);
     drawCylinder(); //right forearm
     model_view *= Scale(1/0.15, 1/0.15, 1/0.5);
     model_view *= RotateY(-90);
-    model_view *= Translate(0.75, 0.0, 0.0);
+    model_view *= Translate(0.75-sub, 0.0, 0.0);
     model_view *= RotateY(90);
     model_view *= RotateX(90);
     model_view *= Scale(0.25, 0.25, 1.0/20);
     drawCylinder(); //right hand
 
+	model_view = mvstack.pop();
+
+	if( throwDone > throwTime - throwTime/20.0 )
+	{
+	    mvstack.push(model_view);
+		double origX = 0.7;
+		double origY = 0.5; 
+		double origZ = 1.2;
+		double throwST = throwTime - throwTime/20.0;
+		double throwFT = 1.0f;
+		double throwScale = (throwDone - throwST)/(throwFT-throwST);
+
+		origX -= throwScale*(12.0);
+		origZ += throwScale*(30.0);
+		origY += (15.0)*(throwScale*1) - (9.8)*(throwScale)*(throwScale);
+		double CRX = lastCRX  + throwScale*(560);
+		double CRY = lastCRY  + throwScale*(60);
+		double CRZ = lastCRZ  + throwScale*(75); 
+
+		model_view *= Translate(origX, origY, origZ); 
+        model_view *= RotateX (CRX);
+        model_view *= RotateY (CRY);
+        model_view *= RotateZ (CRZ);
+		set_colour(0.8,0.8,0.8);
+		drawCube(gl_textures[0], gl_textures[1]);
+		set_colour(162.0/256.0, 55.0/256.0, 156/256.0);
+		model_view = mvstack.pop();
+	}
+
 	set_colour(1.0,1.0,1.0);
-	mvstack.pop();
+}
+
+void drawRebelEngineFlame()
+{
+    model_view *= Translate(0.0,0.0,1.0);
+    model_view *= Scale(0.7, 0.7, 1/8.0);
+    glUniform1i( uEnableSkybox, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	set_colour(1.0,1.0,1.0);
+	model_view *= RotateZ(10*TIME);
+    drawCone(gl_textures[13]);
+	model_view *= RotateZ(-10*TIME);
+    set_colour(1.0,1.0,1.0);
+    glUniform1i( uEnableSkybox, 0);
+    glDisable(GL_BLEND);
+    model_view *= Scale(1/0.7, 1/0.7, 8.0);
+	model_view *= Translate(0.0,0.0,-1.0);
+}
+
+void drawRebels(double rebelY)
+{
+        mvstack.push(model_view);
+		model_view *= Translate(rebelY, 0.0, 0.0);
+        model_view *= RotateY(90.0);
+        model_view *= Scale(1.0,1.0,4.0f);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(2.0f, 0.0f, 0.0f);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-4.0f, 0.0, 0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-1.0f, 1.8, 0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+
+        model_view *= Translate(0.0, -3.6, 0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Scale(1.0, 1.0, 1/4.0);
+        model_view *= Translate(1.0+2.0, 1.8, -6.0);
+        model_view *= RotateX(-90.0);
+        model_view *= Scale(8.0, 8.0, 5.0);
+        drawPyramid(gl_textures[15], gl_textures[6]);
+        model_view *= Scale(1/8.0, 1/8.0, 1/5.0);
+        model_view *= RotateX(90.0);
+        model_view *= Translate(0.0, 0.0, -4.0-4);
+        model_view *= RotateZ(90);
+        model_view *= Scale(1.0, 1.0, 8.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        model_view *= Scale(1.0, 1.0, 1/8.0);
+        model_view *= RotateZ(45.0);
+        model_view *= Scale(2.5, 2.5, 7.0);
+        drawCube(gl_textures[15], gl_textures[6]);
+        model_view *= Scale(1/2.5, 1/2.5, 1/7.0);
+        model_view *= RotateZ(-45.0);
+        model_view *= Translate(0.0, 0.0, -4.0-4.0);
+        model_view *= RotateX(90.0);
+        model_view *= Scale(2.0, 2.0, 4.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+
+
+        model_view = mvstack.pop();
 }
 
 // Display Function (Primary Changes)
@@ -984,21 +1178,146 @@ void display(void)
     
 	if ( SCENE_0_START <= TIME && TIME < SCENE_0_END ) //titlecard 1
 	{
-        Camera.x = 0.0f; Camera.y= 0.0f;
-        Camera.Rx = 0.0; Camera.Ry = 0.0f; Camera. Rz = 0.0f;
-	    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
-		if ( TIME < SCENE_0_END-1)
-			Camera.z = sinBetween(SCENE_0_START, SCENE_0_END-1.0, -3.0f, -1.5f, TIME);
-		place_camera();
-		drawMCube(gl_textures[2]);
+        glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
+        default_camera();
+        place_camera();
+        double fade;
+        double eighth = (SCENE_0_END-SCENE_0_START)/8;
+        if (TIME < SCENE_0_START+eighth)
+        {
+            fade = 1.0f;
+            glUniform1f(uFade, (float)fade);
+        }
+        else if (TIME > SCENE_0_END - 3*eighth && TIME < SCENE_0_END-eighth )
+        {
+            fade = sinBetween(SCENE_0_END-3*eighth, SCENE_0_END-eighth, 1.0, 0.0, TIME);
+            glUniform1f(uFade, (float)fade);
+        }
+
+        //double fade = sinBetween(SCENE_2_START, SCENE_2_END, 1.0, 0.0, TIME);
+        glUniform1i(uEnableFade, 1);
+        glUniform1i( uEnableSkybox, 1);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        model_view *= Scale(800.0/55, 600.0/55, 1.0);
+		if (TIME == 0.0)	
+        	drawDecal(gl_textures[14]);
+		else
+			drawDecal(gl_textures[7]);
+        model_view *= Scale(55/800.0, 55/600.0, 1/1.0);
+        glUniform1i(uEnableFade, 0);
+        glUniform1i( uEnableSkybox, 0);
 	}
 	else if ( SCENE_1_START <= TIME && TIME < SCENE_1_END ) //titlecard 2
 	{
 	    glUniform4f(uLightPos,  15.0f, 15.0f, 30.0f, 0.0f);
 		mvstack.push(model_view);
-		model_view *= Angel::LookAt( eye, ref, up );
-		glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
-		drawMCube(gl_textures[2]);
+
+        double duration = 7.0;
+        double spinTime = 3.0;
+        double spinWait = 1.0;
+        double startTime = SCENE_1_START + spinTime + spinWait ;
+        double endTime = SCENE_1_START + spinTime +spinWait + duration;
+        double percent = 0.0f;
+
+        if ( TIME < startTime-spinWait)
+        {
+            double spinScale = (TIME - SCENE_1_START)/(startTime-spinWait - SCENE_1_START);
+
+            ref.y = -5.0; ref.z = -7.0; ref.x = 0.0;
+            eye.x = -10.0 * sin (spinScale*M_PI*2);
+            eye.z =  -6 + 10.0 * cos (spinScale*M_PI*2);
+            eye.y = 10.0 + -10*spinScale;
+
+            model_view *= Angel::LookAt( eye, ref, up );
+            glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
+
+        }
+        else
+        {
+            double spinScale = 1.0;
+            ref.y = -5.0; ref.z = -7.0; ref.x = 0.0;
+            eye.x = -10.0 * sin (spinScale*M_PI*2);
+            eye.z =  -6 + 10.0 * cos (spinScale*M_PI*2);
+            eye.y = 0.0f;
+
+            model_view *= Angel::LookAt( eye, ref, up );
+            glUniformMatrix4fv( uView, 1, GL_TRUE, model_view );
+        }
+
+        model_view *= Translate( 0.0, -6.0, -7.0 );
+
+        if(TIME >= startTime && TIME <= endTime )
+        {
+            percent = (TIME - startTime)/(endTime - startTime);
+        }
+        else if ( TIME > endTime )
+            percent = 1.0;
+
+        drawMan(percent);
+
+		if( TIME >= SCENE_1_START && TIME < SCENE_1_START + spinTime)
+		{
+			double fadeIStart = SCENE_1_START;
+			double fadeIEnd = SCENE_1_START + 1.0;
+			double fadeI = (TIME - fadeIStart) / (fadeIEnd - fadeIStart);
+			if ( fadeI > 1.0)
+                fadeI = 1.0;
+            else if (fadeI < 0.0)
+                fadeI = 0.0;
+			fadeI = 1- fadeI;
+			glUniform1f(uFade, (float)fadeI);
+
+			model_view *= RotateX(90);
+            model_view *= Scale(4.0, 4.0, 4.0);
+            glUniform1i(uEnableFade, 1);
+            glUniform1i( uEnableSkybox, 1);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			set_colour(0.0, 0.0, 0.0);
+            drawCylinder();
+			set_colour(1.0,1.0,1.0);
+            glUniform1i(uEnableFade, 0);
+            glUniform1i( uEnableSkybox, 0);
+
+		}
+		else if( TIME >= SCENE_1_START + spinTime )
+		{
+			double fadeOStart = SCENE_1_END-1.0;
+			double fadeOEnd	  = SCENE_1_END;
+			double fadeO = (TIME - fadeOStart) / (fadeOEnd - fadeOStart);
+			if ( fadeO > 1.0)
+				fadeO = 1.0;
+			else if (fadeO < 0.0)
+				fadeO = 0.0;
+
+			double fadeStart = spinTime + SCENE_1_START;
+			double fadeEnd = fadeStart + 1.0;
+			double fade = (TIME - fadeStart) / (fadeEnd - fadeStart);
+			if ( fade > 1.0)
+				fade = 1.0;
+			glUniform1f(uFade, (float)fade);
+			model_view *= Translate( 0.2, 2.0, 3.5);
+			model_view *= Scale(800.0/55.0, 600.0/55.0, 1.0);
+    	   	glUniform1i(uEnableFade, 1);
+    	    glUniform1i( uEnableSkybox, 1);
+    	    glEnable(GL_BLEND);
+    	    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    	    drawDecal(gl_textures[4]);
+
+			model_view *= Scale(55.0/800, 55.0/600, 1.0);
+			model_view *= Translate( 0.0, 0.0, 1.0);
+			model_view *= Scale(800.0/55.0, 600.0/55.0, 1.0);
+			glUniform1f(uFade, (float)fadeO);
+			set_colour(0.0f, 0.0f, 0.0f);
+			drawDecal();
+			set_colour(1.0f, 1.0f, 1.0f);
+
+    	    glUniform1i(uEnableFade, 0);
+	        glUniform1i( uEnableSkybox, 0);
+
+		}
+
 		model_view = mvstack.pop();
 	}
 	else if (SCENE_2_START <= TIME && TIME < SCENE_2_END ) // along time ago
@@ -1038,6 +1357,7 @@ void display(void)
 	}
 	else if ( SCENE_3_START <= TIME && TIME < SCENE_3_END ) // title crawl & opening ships
 	{
+		glUniform4f(uLightPos,  0.0f, -30.0f, 0.0f, 0.0f);
 		double panTime = 119.00;
 		double laserTime = 130.0;
 		double laserLen = 0.5;
@@ -1054,8 +1374,8 @@ void display(void)
 		}
 		else if ( TIME < SCENE_3_END)
 		{
-			rebelY = linearBetween(laserTime-5.0f, SCENE_3_END, 0.0f, -300.0f, TIME);
-			imperialY = linearBetween(laserTime-5.0f, SCENE_3_END, 200.0f, -100.0f, TIME);
+			rebelY = linearBetween(laserTime-5.0f, SCENE_3_END, 100.0f, -500.0f, TIME);
+			imperialY = linearBetween(laserTime-5.0f, SCENE_3_END, 250.0f, -350.0f, TIME);
 			Camera.x = 0.0f; Camera.y= 0.0f; Camera.z = -20.0f;
             glUniform4f(uLightPos,  600.0f, 600.0f, 000.0f, 0.0f);
 			if ( TIME < 127.0 )
@@ -1069,17 +1389,24 @@ void display(void)
 			place_camera();
 			draw_stars();
 			draw_planets();
-			drawRebelScum(rebelY);
-			drawImperialBastards(imperialY);
+			model_view *= Translate(0.0, -4.0, 15.0);
+			model_view *= RotateZ(90.0);
+			model_view *= RotateX(90.0);
+			drawRebels(rebelY);
+			model_view *= RotateX(-90);
+			model_view *= RotateZ(-90.0);
+			model_view *= Translate(0.0, 4.0, -15.0);
+			rebelY += 4.0;
+			//drawImperialBastards(imperialY);
 			for( int i = 0; i < 10; i ++)
 			{
-				draw_laser(1,16,imperialY,rebelY,laserTime+laserOffset, laserTime+laserLen+laserOffset,1,0,TIME);
-				draw_laser(2,15,imperialY,rebelY,laserTime+laserLen+laserOffset, laserTime+laserLen*2+laserOffset,1,1,TIME);
-				draw_laser(-2,17,rebelY,imperialY,laserTime+laserLen*3+laserOffset, laserTime+laserLen*4+laserOffset,0,0,TIME);
-				draw_laser(1,16,imperialY,rebelY,laserTime+laserLen*4+laserOffset, laserTime+laserLen*5+laserOffset,1,1,TIME);
-				draw_laser(-1,17,rebelY, imperialY,laserTime+laserLen*6+laserOffset, laserTime+laserLen*7+laserOffset,0,0,TIME);
-				draw_laser(-2,16,rebelY, imperialY,laserTime+laserLen*7+laserOffset, laserTime+laserLen*8+laserOffset,0,1,TIME);
-				draw_laser(1,15,imperialY,rebelY,laserTime+laserLen*9+laserOffset, laserTime+laserLen*10+laserOffset,1,1,TIME);
+				draw_laser(-7,16,imperialY,rebelY,laserTime+laserOffset, laserTime+laserLen+laserOffset,1,0,TIME);
+				draw_laser(-4,15,imperialY,rebelY,laserTime+laserLen+laserOffset, laserTime+laserLen*2+laserOffset,1,1,TIME);
+				draw_laser(3,17,rebelY,imperialY,laserTime+laserLen*3+laserOffset, laserTime+laserLen*4+laserOffset,0,1,TIME);
+				draw_laser(-5,16,imperialY,rebelY,laserTime+laserLen*4+laserOffset, laserTime+laserLen*5+laserOffset,1,1,TIME);
+				draw_laser(0,17,rebelY, imperialY,laserTime+laserLen*6+laserOffset, laserTime+laserLen*7+laserOffset,0,0,TIME);
+				draw_laser(1,16,rebelY, imperialY,laserTime+laserLen*7+laserOffset, laserTime+laserLen*8+laserOffset,0,1,TIME);
+				draw_laser(3,15,imperialY,rebelY,laserTime+laserLen*9+laserOffset, laserTime+laserLen*10+laserOffset,1,1,TIME);
 				laserOffset += laserLen*10;
 			}
 		}
@@ -1087,11 +1414,71 @@ void display(void)
 	else if ( SCENE_4_START <= TIME && TIME < SCENE_4_END +100.0f ) // forward engines hit
     {
 		default_camera();
-		Camera.Rx = 25.0;
-		Camera.z = -5.0;
+		Camera.z = -75;
+		Camera.Rx = 0.0;
 		place_camera();
-		model_view *= Translate( 0.0, -6.0, -7.0 );
-		drawMan(0.0);
+		
+		mvstack.push(model_view);
+
+		model_view *= RotateY(90.0);
+		model_view *= Scale(1.0,1.0,4.0f);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+		drawRebelEngineFlame();
+		model_view *= Translate(2.0f, 0.0f, 0.0f);
+		drawCylinder(gl_textures[15], gl_textures[6]);		
+		drawRebelEngineFlame();
+		model_view *= Translate(-4.0f, 0.0, 0.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+		model_view *= Translate(-1.0f, 1.8, 0.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+		model_view *= Translate(2.0f,0.0,0.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+		model_view *= Translate(2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+		model_view *= Translate(2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+
+		model_view *= Translate(0.0, -3.6, 0.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+        model_view *= Translate(-2.0f,0.0,0.0);
+        drawCylinder(gl_textures[15], gl_textures[6]);
+        drawRebelEngineFlame();
+		model_view *= Scale(1.0, 1.0, 1/4.0);
+		model_view *= Translate(1.0+2.0, 1.8, -6.0);
+		model_view *= RotateX(-90.0);
+		model_view *= Scale(8.0, 8.0, 5.0);
+		drawPyramid(gl_textures[15], gl_textures[6]);
+		model_view *= Scale(1/8.0, 1/8.0, 1/5.0);
+		model_view *= RotateX(90.0);
+		model_view *= Translate(0.0, 0.0, -4.0-4);
+		model_view *= RotateZ(90);
+		model_view *= Scale(1.0, 1.0, 8.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);		
+		model_view *= Scale(1.0, 1.0, 1/8.0);
+		model_view *= RotateZ(45.0);
+		model_view *= Scale(2.5, 2.5, 7.0);
+		drawCube(gl_textures[15], gl_textures[6]);
+		model_view *= Scale(1/2.5, 1/2.5, 1/7.0);
+		model_view *= RotateZ(-45.0);
+		model_view *= Translate(0.0, 0.0, -4.0-4.0);
+		model_view *= RotateX(90.0);
+		model_view *= Scale(2.0, 2.0, 4.0);
+		drawCylinder(gl_textures[15], gl_textures[6]);
+
+
+		model_view = mvstack.pop();
 	}
     glutSwapBuffers();
     if(Recording == 1)
@@ -1185,8 +1572,8 @@ void idleCB(void)
         else
             TIME += 0.033 + OFFSET; // save at 30 frames per second.        
 
-        eye.x = 7*sin(TIME);
-        eye.z = 7*cos(TIME);
+        //eye.x = 7*sin(TIME);
+        //eye.z = 7*cos(TIME);
         
         
 		if (Recording)

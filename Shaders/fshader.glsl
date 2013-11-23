@@ -23,7 +23,10 @@ void main()
 	{
 		vec4 alpha = texture2D(Tex, vec2(gl_TexCoord[0])).aaaa;
 		if (EnableFade == 1)
-			gl_FragColor = alpha*vec4(1.0,1.0,1.0,Fade)*texture2D(Tex, vec2(gl_TexCoord[0]));
+			if( EnableTex == 1 )
+				gl_FragColor = alpha*vec4(1.0,1.0,1.0,Fade)*texture2D(Tex, vec2(gl_TexCoord[0]));
+			else
+				gl_FragColor = vec4(1.0,1.0,1.0,Fade)*DiffuseProduct;
 		else
 			gl_FragColor = alpha*texture2D(Tex, vec2(gl_TexCoord[0]));
 	}
