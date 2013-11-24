@@ -1550,6 +1550,11 @@ void display(void)
     {
 		Animate = 1 - Animate;
 		jumpTime(0.0);
+		#ifndef __NOAUDIO__
+        if( audioRunning )
+        	kill(audioPID, SIGKILL);
+        audioRunning = 0;
+        #endif
 
 	}
     glutSwapBuffers();
