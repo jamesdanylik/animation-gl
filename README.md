@@ -9,6 +9,9 @@ My project includes numerous advanced concepts, like Shader Fade and Transparenc
 a skybox mode for rendinging surfaces outside of the lighting equation, keyframe-based
 figure animation, and finally some basic audio support of linux.
 
+NOTE: This build had to use downsapled textured and audio to make the submission size
+limit.  The full project is available for download  at github.com/ratherbelucky/animation-gl.
+
 Instructions
 ============
 
